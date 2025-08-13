@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/alan199501/ai-assistant-sdk/compare/v1.0.1...v1.1.0) (2025-08-13)
+
+
+### Features
+
+* **ci:** Add release-please workflow for automated versioning ([356ffc4](https://github.com/alan199501/ai-assistant-sdk/commit/356ffc479894fcae88ff4b688028a995e37a79d6))
+
+
+### Bug Fixes
+
+* **ci:** Add issues write permission for release-please to manage labels ([5349983](https://github.com/alan199501/ai-assistant-sdk/commit/53499837a31f5fd372e9b39aeb1d89d23181d484))
+* **ci:** Install dev dependencies for running tests in release workflow ([431a7b5](https://github.com/alan199501/ai-assistant-sdk/commit/431a7b55ccb2fe516cc186e4e7d08b210ee7258e))
+
 ## [Unreleased]
 
 ## [1.0.0] - 2024-01-XX
