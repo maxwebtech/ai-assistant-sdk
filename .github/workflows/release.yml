@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Run tests
+        run: composer test
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract changes for this version from CHANGELOG.md
+            changelog=$(awk '/^## \['"${GITHUB_REF#refs/tags/}"'\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md || echo "")
+          else
+            changelog="Release ${{ steps.version.outputs.version }}"
+          fi
+          
+          if [ -z "$changelog" ]; then
+            changelog="Release ${{ steps.version.outputs.version }}"
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: AI Assistant PHP SDK ${{ steps.version.outputs.version }}
+          body: |
+            ## 🚀 AI Assistant PHP SDK ${{ steps.version.outputs.version }}
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 📦 Installation
+            
+            ```bash
+            composer require maxwebtech/ai-assistant-sdk:${{ steps.version.outputs.version }}
+            ```
+            
+            ### 📚 Documentation
+            
+            - [README](https://github.com/maxwebtech/ai-assistant-sdk/blob/main/README.md)
+            - [API Documentation](https://docs.maxwebtech.com/ai-assistant-sdk)
+            
+            ### 🔧 Requirements
+            
+            - PHP ^8.0
+            - firebase/php-jwt ^6.0
+            
+            ---
+            
+            **Full Changelog**: https://github.com/maxwebtech/ai-assistant-sdk/compare/v1.0.0...${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            README.md
+            LICENSE
+            composer.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
