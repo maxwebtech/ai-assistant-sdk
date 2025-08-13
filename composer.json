@@ -16,9 +16,7 @@
     "homepage": "https://github.com/maxwebtech/ai-assistant-sdk",
     "authors": [
         {
-            "name": "MaxWebTech",
-            "email": "support@maxwebtech.com",
-            "homepage": "https://maxwebtech.com"
+            "name": "MaxWebTech"
         }
     ],
     "require": {
