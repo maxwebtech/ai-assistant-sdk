@@ -409,12 +409,6 @@ $membership = [
 
 MIT License. 詳見 [LICENSE](LICENSE) 文件。
 
-## 支援
-
-- 📧 Email: support@maxwebtech.com
-- 🌐 Website: https://maxwebtech.com
-- 📖 文檔: https://docs.maxwebtech.com/ai-assistant
-- 💬 社群: https://community.maxwebtech.com
 
 ## 貢獻
 
