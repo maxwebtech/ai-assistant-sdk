@@ -1,10 +1,10 @@
 {
-    "name": "maxwebtech/ai-assistant-sdk",
+    "name": "alan199501/ai-assistant-sdk",
     "description": "PHP SDK for AI Assistant integration with JWT authentication and conversation limits",
     "type": "library",
     "license": "MIT",
     "keywords": ["ai", "assistant", "chatbot", "jwt", "sdk", "conversation", "chat", "widget"],
-    "homepage": "https://github.com/maxwebtech/ai-assistant-sdk",
+    "homepage": "https://github.com/alan199501/ai-assistant-sdk",
     "authors": [
         {
             "name": "MaxWebTech",
