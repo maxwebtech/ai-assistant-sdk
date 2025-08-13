@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v1.1.0...v1.1.1) (2025-08-13)
+
+
+### Miscellaneous Chores
+
+* **ci:** Remove manual release workflow, use release-please only ([c6f1a7a](https://github.com/maxwebtech/ai-assistant-sdk/commit/c6f1a7a5d3532781976134141f98346e4242af54))
+* **composer:** Update package namespace from alan199501 to maxwebtech ([3be7af8](https://github.com/maxwebtech/ai-assistant-sdk/commit/3be7af8551b5faf31a68708d5621b3ba11a2b0b5))
+* **docs:** Remove support contact information ([a70b674](https://github.com/maxwebtech/ai-assistant-sdk/commit/a70b6740bd46b772d53c9f6e7a435ab7c2c89e91))
+
 ## [1.1.0](https://github.com/alan199501/ai-assistant-sdk/compare/v1.0.1...v1.1.0) (2025-08-13)
 
 
