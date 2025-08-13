@@ -36,7 +36,7 @@ class AiAssistantSDK
         $this->iframeToken = $config['iframe_token'] ?? null;
         $this->jwtSecret = $config['jwt_secret'] ?? throw new InvalidArgumentException('JWT secret is required');
         $this->issuer = $config['issuer'] ?? null;
-        $this->apiUrl = $config['api_url'] ?? 'https://ai-assistant.com';
+        $this->apiUrl = $config['api_url'] ?? 'http://localhost:8000';
     }
 
     /**
@@ -272,4 +272,5 @@ class AiAssistantSDK
 
         return implode("\n                ", $jsLines);
     }
+
 }
