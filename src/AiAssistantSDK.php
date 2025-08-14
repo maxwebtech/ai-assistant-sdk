@@ -30,7 +30,7 @@ class AiAssistantSDK
     {
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
-        $this->apiUrl = $config['api_url'] ?? 'http://localhost:8000';
+        $this->apiUrl = $config['api_url'] ?? 'https://kitten-flowing-donkey.ngrok-free.app';
     }
 
 
