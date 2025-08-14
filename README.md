@@ -4,16 +4,17 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/maxwebtech/ai-assistant-sdk.svg?style=flat-square)](https://packagist.org/packages/maxwebtech/ai-assistant-sdk)
 [![License](https://img.shields.io/packagist/l/maxwebtech/ai-assistant-sdk.svg?style=flat-square)](https://packagist.org/packages/maxwebtech/ai-assistant-sdk)
 
-簡化 AI Assistant 整合的 PHP SDK，支援 JWT 認證和會員限制功能。
+簡化 AI Assistant 整合的 PHP SDK，支援 JWT 認證和動態會員等級管理。
 
 ## 功能特色
 
 - 🔐 **JWT 認證**：安全的用戶身份驗證
-- 👥 **會員等級**：支援多層級會員限制
+- 👥 **動態會員等級**：支援資料庫驅動的多層級會員限制
 - 🎨 **多種整合方式**：Widget、iframe、JavaScript SDK
 - 🛡️ **安全性**：防重放攻擊、時間戳驗證
 - 📱 **響應式**：支援桌面和行動裝置
 - 🎯 **易於使用**：簡潔的 API 設計
+- ⚡ **彈性部署**：支援純匿名、純會員或混合模式
 
 ## 安裝
 
@@ -35,7 +36,8 @@ use MaxWebTech\AiAssistant\AiAssistantSDK;
 $sdk = new AiAssistantSDK([
     'widget_token' => 'wt_your_widget_token',
     'iframe_token' => 'if_your_iframe_token',  // 可選
-    'jwt_secret' => 'your_shared_secret',
+    'api_token' => 'at_your_api_token',        // API 管理用
+    'jwt_secret' => 'your_shared_secret',      // 可選，JWT 使用
     'issuer' => 'https://your-website.com',   // 可選
     'api_url' => 'https://ai-assistant.com'   // 可選
 ]);
@@ -133,63 +135,78 @@ try {
 }
 ```
 
-## 會員等級
+## 會員等級管理
 
-### 預設等級
-
-```php
-use MaxWebTech\AiAssistant\AiAssistantSDK;
-
-// 獲取預設限制
-$limits = AiAssistantSDK::getDefaultLimits('premium');
-// 返回: ['daily_conversations' => 100, 'daily_messages' => 1000]
-```
-
-| 等級 | 每日對話 | 每日訊息 | 說明 |
-|------|----------|----------|------|
-| guest | 3 | 20 | 訪客 |
-| free | 10 | 100 | 免費會員 |
-| basic | 30 | 300 | 基礎會員 |
-| premium | 100 | 1000 | 付費會員 |
-| enterprise | -1 | -1 | 企業會員（無限制） |
-
-### 查詢使用者剩餘限制
+### 獲取所有等級
 
 ```php
-// 獲取使用者的使用狀況和剩餘限制
-try {
-    $usageStatus = $sdk->getUserUsageStatus($user['id']);
-    
-    echo "會員等級: " . $usageStatus['membership_level'] . "\n";
-    echo "對話使用狀況:\n";
-    echo "  已使用: " . $usageStatus['usage']['daily_conversations']['used'] . "\n";
-    echo "  限制: " . $usageStatus['usage']['daily_conversations']['limit'] . "\n";
-    echo "  剩餘: " . $usageStatus['usage']['daily_conversations']['remaining'] . "\n";
-    
-    echo "訊息使用狀況:\n";
-    echo "  已使用: " . $usageStatus['usage']['daily_messages']['used'] . "\n";
-    echo "  限制: " . $usageStatus['usage']['daily_messages']['limit'] . "\n";
-    echo "  剩餘: " . $usageStatus['usage']['daily_messages']['remaining'] . "\n";
-    
-    if ($usageStatus['reset_time']) {
-        echo "重置時間: " . $usageStatus['reset_time'] . "\n";
-    }
-    
-    // 檢查是否為無限制方案
-    if ($usageStatus['usage']['daily_conversations']['unlimited']) {
-        echo "對話: 無限制\n";
-    }
-    
-} catch (Exception $e) {
-    echo "查詢失敗: " . $e->getMessage();
+// 需要設定 api_token
+$sdk = new AiAssistantSDK([
+    'widget_token' => 'wt_xxx',
+    'api_token' => 'at_xxx'
+]);
+
+// 獲取租戶配置的所有等級
+$tiers = $sdk->getMembershipTiers();
+
+foreach ($tiers['data'] as $tier) {
+    echo "等級: {$tier['name']} ({$tier['slug']})\n";
+    echo "每日訊息: " . ($tier['daily_message_limit'] ?? '無限制') . "\n";
+    echo "每日對話: " . ($tier['daily_conversation_limit'] ?? '無限制') . "\n";
+    echo "---\n";
 }
 ```
 
-### 使用自訂 Token 查詢
+### 獲取特定等級
 
 ```php
-// 使用特定的認證 token 查詢
-$usageStatus = $sdk->getUserUsageStatus($user['id'], 'custom_auth_token');
+$tier = $sdk->getMembershipTier('premium');
+if ($tier['success']) {
+    echo "等級名稱: " . $tier['data']['name'] . "\n";
+    echo "每日訊息限制: " . ($tier['data']['daily_message_limit'] ?? '無限制') . "\n";
+}
+```
+
+### 檢查用戶額度
+
+```php
+// 會員用戶額度檢查
+$quota = $sdk->checkUserQuota('user123');
+
+// 匿名用戶額度檢查
+$quota = $sdk->checkUserQuota('', 'session_abc123');
+
+if ($quota['success']) {
+    $data = $quota['data'];
+    echo "當前等級: " . $data['tier']['name'] . "\n";
+    echo "訊息使用: {$data['usage']['messages']} / " . ($data['tier']['daily_message_limit'] ?? '無限制') . "\n";
+    echo "對話使用: {$data['usage']['conversations']} / " . ($data['tier']['daily_conversation_limit'] ?? '無限制') . "\n";
+    echo "可發送訊息: " . ($data['can_send_message'] ? '是' : '否') . "\n";
+    echo "可創建對話: " . ($data['can_create_conversation'] ? '是' : '否') . "\n";
+    echo "重置時間: " . $data['reset_time'] . "\n";
+}
+```
+
+### 分配會員等級
+
+```php
+// 將用戶設定為特定等級
+$result = $sdk->assignMembershipTier('user123', 'premium');
+
+if ($result['success']) {
+    echo "成功將用戶升級為 premium 等級\n";
+}
+```
+
+### 重置用戶額度
+
+```php
+// 清除用戶額度快取（管理員功能）
+$result = $sdk->resetUserQuota('user123');
+
+if ($result['success']) {
+    echo "用戶額度已重置\n";
+}
 ```
 
 ### 自訂限制
@@ -208,6 +225,61 @@ $customMembership = [
 ];
 
 echo $sdk->getWidgetHTML($user, ['membership' => $customMembership]);
+```
+
+## 使用情境
+
+### 情境 1：完全匿名網站（無會員制度）
+
+```php
+$sdk = new AiAssistantSDK(['widget_token' => 'wt_xxx']);
+
+// 所有用戶都使用相同額度（由管理員在後台設定匿名預設等級）
+echo $sdk->getWidgetHTML(['id' => session_id()]);
+```
+
+### 情境 2：有會員制度的網站
+
+```php
+$sdk = new AiAssistantSDK([
+    'widget_token' => 'wt_xxx',
+    'api_token' => 'at_xxx'
+]);
+
+// 根據用戶等級使用不同額度
+$userTier = getUserMembershipLevel($userId); // 你的邏輯
+
+echo $sdk->getWidgetHTML([
+    'id' => $userId,
+    'name' => $userName,
+    'email' => $userEmail
+], [
+    'membership' => ['level' => $userTier] // 'free', 'premium', etc.
+]);
+
+// 檢查用戶額度狀況
+$quota = $sdk->checkUserQuota($userId);
+if (!$quota['data']['can_send_message']) {
+    echo "額度已用完，請升級會員或等待明日重置";
+}
+```
+
+### 情境 3：混合模式（支援登入用戶和訪客）
+
+```php
+if (auth()->check()) {
+    // 已登入用戶
+    echo $sdk->getWidgetHTML([
+        'id' => auth()->id(),
+        'name' => auth()->user()->name,
+        'email' => auth()->user()->email
+    ], [
+        'membership' => ['level' => auth()->user()->tier]
+    ]);
+} else {
+    // 訪客用戶
+    echo $sdk->getWidgetHTML(['id' => session_id()]);
+}
 ```
 
 ## 錯誤處理
@@ -353,7 +425,8 @@ public function __construct(array $config)
 **參數：**
 - `widget_token` (string, 可選): Widget Token
 - `iframe_token` (string, 可選): iframe Token  
-- `jwt_secret` (string, 必須): JWT 共享密鑰
+- `api_token` (string, 可選): API Token（用於會員等級管理）
+- `jwt_secret` (string, 可選): JWT 共享密鑰
 - `issuer` (string, 可選): JWT 發行者
 - `api_url` (string, 可選): API 基礎 URL
 
@@ -399,13 +472,45 @@ public function validateJWT(string $jwt): array
 
 驗證並解析 JWT Token。
 
-##### getDefaultLimits()
+##### getMembershipTiers()
 
 ```php
-public static function getDefaultLimits(string $level): array
+public function getMembershipTiers(): array
 ```
 
-獲取指定會員等級的預設限制。
+獲取租戶的所有會員等級（需要 api_token）。
+
+##### getMembershipTier()
+
+```php
+public function getMembershipTier(string $slug): array
+```
+
+獲取特定會員等級資訊（需要 api_token）。
+
+##### checkUserQuota()
+
+```php
+public function checkUserQuota(string $userId, ?string $sessionId = null): array
+```
+
+檢查用戶額度狀況（需要 api_token）。
+
+##### assignMembershipTier()
+
+```php
+public function assignMembershipTier(string $userId, string $tierSlug): array
+```
+
+分配會員等級給用戶（需要 api_token）。
+
+##### resetUserQuota()
+
+```php
+public function resetUserQuota(string $userId, ?string $sessionId = null): array
+```
+
+重置用戶額度（需要 api_token）。
 
 ## 疑難排解
 
