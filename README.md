@@ -36,7 +36,6 @@ use MaxWebTech\AiAssistant\AiAssistantSDK;
 $sdk = new AiAssistantSDK([
     'widget_token' => 'wt_your_widget_token',
     'iframe_token' => 'if_your_iframe_token',  // 可選
-    'api_token' => 'at_your_api_token',        // API 管理用
     'jwt_secret' => 'your_shared_secret',      // 可選，JWT 使用
     'issuer' => 'https://your-website.com',   // 可選
     'api_url' => 'https://ai-assistant.com'   // 可選
@@ -117,22 +116,15 @@ $jsCode = $sdk->getWidgetJS($user, [
 echo "<script>{$jsCode}</script>";
 ```
 
-### JWT 操作
+### 會員等級 API 認證
+
+SDK 使用 JWT 認證來調用會員等級管理相關的 API：
 
 ```php
-// 生成 JWT
-$jwt = $sdk->generateJWT($user, [
-    'level' => 'premium',
-    'daily_conversation_limit' => 50
+$sdk = new AiAssistantSDK([
+    'widget_token' => 'wt_your_widget_token',  // 用於 Widget 嵌入
+    'jwt_secret' => 'your_jwt_secret',         // 用於 API 調用
 ]);
-
-// 驗證 JWT
-try {
-    $payload = $sdk->validateJWT($jwt);
-    echo "用戶 ID: " . $payload['sub'];
-} catch (Exception $e) {
-    echo "JWT 無效: " . $e->getMessage();
-}
 ```
 
 ## 會員等級管理
@@ -140,14 +132,14 @@ try {
 ### 獲取所有等級
 
 ```php
-// 需要設定 api_token
+// 需要 JWT secret 來調用管理 API
 $sdk = new AiAssistantSDK([
     'widget_token' => 'wt_xxx',
-    'api_token' => 'at_xxx'
+    'jwt_secret' => 'your_jwt_secret'
 ]);
 
-// 獲取租戶配置的所有等級
-$tiers = $sdk->getMembershipTiers();
+// 獲取租戶配置的所有等級（需要租戶 ID）
+$tiers = $sdk->getMembershipTiers(123); // 123 是租戶 ID
 
 foreach ($tiers['data'] as $tier) {
     echo "等級: {$tier['name']} ({$tier['slug']})\n";
@@ -242,8 +234,7 @@ echo $sdk->getWidgetHTML(['id' => session_id()]);
 
 ```php
 $sdk = new AiAssistantSDK([
-    'widget_token' => 'wt_xxx',
-    'api_token' => 'at_xxx'
+    'widget_token' => 'wt_xxx'
 ]);
 
 // 根據用戶等級使用不同額度
@@ -425,20 +416,12 @@ public function __construct(array $config)
 **參數：**
 - `widget_token` (string, 可選): Widget Token
 - `iframe_token` (string, 可選): iframe Token  
-- `api_token` (string, 可選): API Token（用於會員等級管理）
 - `jwt_secret` (string, 可選): JWT 共享密鑰
 - `issuer` (string, 可選): JWT 發行者
 - `api_url` (string, 可選): API 基礎 URL
 
 #### 方法
 
-##### generateJWT()
-
-```php
-public function generateJWT(array $user, array $membership = []): string
-```
-
-生成 JWT Token。
 
 ##### getWidgetHTML()
 
@@ -464,21 +447,14 @@ public function getWidgetJS(array $user, array $options = []): string
 
 生成動態載入 Widget 的 JavaScript 代碼。
 
-##### validateJWT()
-
-```php
-public function validateJWT(string $jwt): array
-```
-
-驗證並解析 JWT Token。
 
 ##### getMembershipTiers()
 
 ```php
-public function getMembershipTiers(): array
+public function getMembershipTiers(int $tenantId): array
 ```
 
-獲取租戶的所有會員等級（需要 api_token）。
+獲取租戶的所有會員等級（使用 JWT 認證）。
 
 ##### getMembershipTier()
 
@@ -486,7 +462,7 @@ public function getMembershipTiers(): array
 public function getMembershipTier(string $slug): array
 ```
 
-獲取特定會員等級資訊（需要 api_token）。
+獲取特定會員等級資訊（使用 widget_token）。
 
 ##### checkUserQuota()
 
@@ -494,7 +470,7 @@ public function getMembershipTier(string $slug): array
 public function checkUserQuota(string $userId, ?string $sessionId = null): array
 ```
 
-檢查用戶額度狀況（需要 api_token）。
+檢查用戶額度狀況（使用 widget_token）。
 
 ##### assignMembershipTier()
 
@@ -502,7 +478,7 @@ public function checkUserQuota(string $userId, ?string $sessionId = null): array
 public function assignMembershipTier(string $userId, string $tierSlug): array
 ```
 
-分配會員等級給用戶（需要 api_token）。
+分配會員等級給用戶（使用 widget_token）。
 
 ##### resetUserQuota()
 
@@ -510,7 +486,7 @@ public function assignMembershipTier(string $userId, string $tierSlug): array
 public function resetUserQuota(string $userId, ?string $sessionId = null): array
 ```
 
-重置用戶額度（需要 api_token）。
+重置用戶額度（使用 widget_token）。
 
 ## 疑難排解
 
