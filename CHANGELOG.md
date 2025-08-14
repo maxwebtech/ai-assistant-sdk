@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v1.1.2...v1.2.0) (2025-08-14)
+
+
+### Features
+
+* **sdk:** Add getUserUsageStatus method to check usage limits ([97df2b7](https://github.com/maxwebtech/ai-assistant-sdk/commit/97df2b70ba26b12738356e0e7131c6d7e5538ea1))
+
 ## [1.1.2](https://github.com/maxwebtech/ai-assistant-sdk/compare/v1.1.1...v1.1.2) (2025-08-13)
 
 
