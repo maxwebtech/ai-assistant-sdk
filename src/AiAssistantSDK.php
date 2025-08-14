@@ -22,6 +22,7 @@ class AiAssistantSDK
     private ?string $widgetToken;
     private ?string $iframeToken;
     private string $apiUrl;
+    private ?string $jwtSecret;
 
     /**
      * SDK 設定
@@ -31,6 +32,7 @@ class AiAssistantSDK
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
         $this->apiUrl = $config['api_url'] ?? 'https://kitten-flowing-donkey.ngrok-free.app';
+        $this->jwtSecret = $config['jwt_secret'] ?? null;
     }
 
 
@@ -322,13 +324,18 @@ class AiAssistantSDK
      * @return array 會員等級清單
      * @throws Exception
      */
-    public function getMembershipTiers(): array
+    public function getMembershipTiers(int $tenantId): array
     {
-        if (!$this->widgetToken) {
-            throw new Exception('Widget token is required for membership tier operations');
+        if (!$this->jwtSecret) {
+            throw new Exception('JWT secret is required for membership tier operations');
         }
 
-        $response = $this->makeApiRequest('GET', '/api/tenant/membership-tiers');
+        $jwt = $this->generateJWT([
+            'tenant_id' => $tenantId,
+            'action' => 'get_membership_tiers'
+        ]);
+
+        $response = $this->makeApiRequestWithJWT('GET', '/api/membership-tiers', [], $jwt);
         return $response;
     }
 
@@ -437,6 +444,90 @@ class AiAssistantSDK
                 'method' => $method,
                 'header' => [
                     'Authorization: Bearer ' . $this->widgetToken,
+                    'Content-Type: application/json',
+                    'Accept: application/json'
+                ],
+                'ignore_errors' => true
+            ]
+        ];
+
+        if ($method === 'GET' && !empty($data)) {
+            $url .= '?' . http_build_query($data);
+        } elseif ($method !== 'GET' && !empty($data)) {
+            $options['http']['content'] = json_encode($data);
+        }
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            throw new Exception('Failed to make API request');
+        }
+
+        $decodedResponse = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Invalid JSON response from API');
+        }
+
+        // 檢查 HTTP 狀態碼
+        if (isset($http_response_header[0])) {
+            $statusCode = (int) substr($http_response_header[0], 9, 3);
+            if ($statusCode >= 400) {
+                $errorMessage = $decodedResponse['message'] ?? 'API request failed';
+                throw new Exception("API Error ({$statusCode}): {$errorMessage}");
+            }
+        }
+
+        return $decodedResponse;
+    }
+
+    /**
+     * 生成 JWT Token
+     * 
+     * @param array $payload JWT payload
+     * @return string JWT token
+     * @throws Exception
+     */
+    private function generateJWT(array $payload): string
+    {
+        if (!$this->jwtSecret) {
+            throw new Exception('JWT secret is required');
+        }
+
+        // 檢查是否安裝 Firebase JWT
+        if (!class_exists('Firebase\\JWT\\JWT')) {
+            throw new Exception('Firebase JWT library is required. Run: composer require firebase/php-jwt');
+        }
+
+        $payload = array_merge([
+            'iss' => 'ai-assistant-sdk',
+            'iat' => time(),
+            'exp' => time() + 3600, // 1小時過期
+            'jti' => bin2hex(random_bytes(16)), // 唯一ID防止重放攻擊
+        ], $payload);
+
+        return \Firebase\JWT\JWT::encode($payload, $this->jwtSecret, 'HS256');
+    }
+
+    /**
+     * 使用 JWT 執行 API 請求
+     * 
+     * @param string $method HTTP 方法
+     * @param string $endpoint API 端點
+     * @param array $data 請求資料
+     * @param string $jwt JWT token
+     * @return array API 回應
+     * @throws Exception
+     */
+    private function makeApiRequestWithJWT(string $method, string $endpoint, array $data = [], string $jwt = ''): array
+    {
+        $url = rtrim($this->apiUrl, '/') . $endpoint;
+        
+        $options = [
+            'http' => [
+                'method' => $method,
+                'header' => [
+                    'Authorization: Bearer ' . $jwt,
                     'Content-Type: application/json',
                     'Accept: application/json'
                 ],
