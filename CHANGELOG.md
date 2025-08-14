@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0 (2025-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* getMembershipTiers() now requires tenantId parameter and uses JWT authentication
+* api_token parameter removed from constructor, all API operations now use widget_token
+
+### Features
+
+* Add JWT authentication for membership tier API calls ([d481785](https://github.com/maxwebtech/ai-assistant-sdk/commit/d4817857f6c0b672f7230133cb4a0dceee337886))
+* Add membership tier and quota management APIs ([5ce28d9](https://github.com/maxwebtech/ai-assistant-sdk/commit/5ce28d91a38f96cc7e7b71b532dbb9fcf1186727))
+* **ci:** Add release-please to automate semantic versioning and changelog generation ([6cb7670](https://github.com/maxwebtech/ai-assistant-sdk/commit/6cb76702e78aa5cfeb98313585b221038a9e654b))
+* **ci:** Add release-please workflow for automated versioning ([356ffc4](https://github.com/maxwebtech/ai-assistant-sdk/commit/356ffc479894fcae88ff4b688028a995e37a79d6))
+* **sdk:** Add getUserUsageStatus method to check usage limits ([a72132c](https://github.com/maxwebtech/ai-assistant-sdk/commit/a72132c3a0d81d861c30268a5d42f276baafc201))
+* Simplify authentication to use single Widget Token ([8e865d0](https://github.com/maxwebtech/ai-assistant-sdk/commit/8e865d086586676f13cb5e6f8c7cc725c6692fcc))
+
+
+### Bug Fixes
+
+* **ci:** Add issues write permission for release-please to manage labels ([5349983](https://github.com/maxwebtech/ai-assistant-sdk/commit/53499837a31f5fd372e9b39aeb1d89d23181d484))
+* **ci:** Install dev dependencies for running tests in release workflow ([431a7b5](https://github.com/maxwebtech/ai-assistant-sdk/commit/431a7b55ccb2fe516cc186e4e7d08b210ee7258e))
+* **sdk:** Revert API URL to localhost for development ([fa9e7db](https://github.com/maxwebtech/ai-assistant-sdk/commit/fa9e7dbd51f92723c50a0f09eb5673dcad15d00a))
+* **sdk:** Update default API URL to ngrok endpoint for testing ([ba23104](https://github.com/maxwebtech/ai-assistant-sdk/commit/ba231041c32dc3ca2ebf9d518443bba3554e816d))
+* **sdk:** Update default API URL to production endpoint ([5c333e5](https://github.com/maxwebtech/ai-assistant-sdk/commit/5c333e53c0f87a84439e6fef54e5026255883c5f))
+
+
+### Miscellaneous Chores
+
+* **ci:** Remove manual release workflow, use release-please only ([d435d3d](https://github.com/maxwebtech/ai-assistant-sdk/commit/d435d3d6c21d7f985b14d4fb3866f876f53e962f))
+* **composer:** Update package namespace from alan199501 to maxwebtech ([5b9575f](https://github.com/maxwebtech/ai-assistant-sdk/commit/5b9575fb99ed2963047831a9800945817b35a677))
+* **composer:** Update package namespace from maxwebtech to alan199501 ([b507593](https://github.com/maxwebtech/ai-assistant-sdk/commit/b507593efbc3f20425fb03f932c60609d10c8206))
+* **docs:** Remove support contact information ([ef05573](https://github.com/maxwebtech/ai-assistant-sdk/commit/ef0557309f4541358d3745af0f4a850f5542bccc))
+* **main:** release 1.1.0 ([#1](https://github.com/maxwebtech/ai-assistant-sdk/issues/1)) ([9cd550f](https://github.com/maxwebtech/ai-assistant-sdk/commit/9cd550f019c1ac84993c6b35a5d6019ee135a492))
+* **main:** release 1.1.1 ([#2](https://github.com/maxwebtech/ai-assistant-sdk/issues/2)) ([dc8e02d](https://github.com/maxwebtech/ai-assistant-sdk/commit/dc8e02d01baf487700c1a0932308a4ba7f970abd))
+* **main:** release 1.1.2 ([#3](https://github.com/maxwebtech/ai-assistant-sdk/issues/3)) ([69515e9](https://github.com/maxwebtech/ai-assistant-sdk/commit/69515e9099eaeae20be701c6ec60ef3aebe3a983))
+* **main:** release 1.2.0 ([#4](https://github.com/maxwebtech/ai-assistant-sdk/issues/4)) ([73defca](https://github.com/maxwebtech/ai-assistant-sdk/commit/73defca8baa4c57e4bf7e87c6cfbf5de9929e139))
+* **main:** release 1.2.1 ([#5](https://github.com/maxwebtech/ai-assistant-sdk/issues/5)) ([d511c5f](https://github.com/maxwebtech/ai-assistant-sdk/commit/d511c5fb46cedac1305e77c654551b9d22080bbf))
+* **main:** release 1.2.2 ([#6](https://github.com/maxwebtech/ai-assistant-sdk/issues/6)) ([3851511](https://github.com/maxwebtech/ai-assistant-sdk/commit/385151162ba0a10e5e053c9efe91760d80654dd7))
+* **main:** release 1.2.3 ([#7](https://github.com/maxwebtech/ai-assistant-sdk/issues/7)) ([d490c18](https://github.com/maxwebtech/ai-assistant-sdk/commit/d490c18e7dfb907be9213ada11e4376b32147401))
+* **main:** release 1.3.0 ([#8](https://github.com/maxwebtech/ai-assistant-sdk/issues/8)) ([dff0be0](https://github.com/maxwebtech/ai-assistant-sdk/commit/dff0be0d83db9bb86ade27d321e2d67fa2c6f2ac))
+* **main:** release 2.0.0 ([#9](https://github.com/maxwebtech/ai-assistant-sdk/issues/9)) ([600ffef](https://github.com/maxwebtech/ai-assistant-sdk/commit/600ffefd144a6d28b68789644d3688ddab7e5393))
+* **main:** release 3.0.0 ([#10](https://github.com/maxwebtech/ai-assistant-sdk/issues/10)) ([73f2bdf](https://github.com/maxwebtech/ai-assistant-sdk/commit/73f2bdfbd3c01cf4a1b04f0d4b21d409667af18b))
+* **sdk:** Update default API URL to localhost:8000 ([c09f602](https://github.com/maxwebtech/ai-assistant-sdk/commit/c09f602b2fc0c3aaab59cb2276bdeda7656d6444))
+
 ## [3.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v2.0.0...v3.0.0) (2025-08-14)
 
 
