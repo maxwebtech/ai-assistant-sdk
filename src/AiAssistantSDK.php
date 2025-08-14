@@ -22,6 +22,7 @@ class AiAssistantSDK
     private ?string $widgetToken;
     private ?string $iframeToken;
     private string $apiUrl;
+    private ?string $apiToken;
 
     /**
      * SDK 設定
@@ -31,6 +32,7 @@ class AiAssistantSDK
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
         $this->apiUrl = $config['api_url'] ?? 'https://kitten-flowing-donkey.ngrok-free.app';
+        $this->apiToken = $config['api_token'] ?? null;
     }
 
 
@@ -168,24 +170,6 @@ class AiAssistantSDK
     }
 
 
-    /**
-     * 獲取會員等級的預設限制
-     * 
-     * @param string $level 會員等級
-     * @return array 限制設定
-     */
-    public static function getDefaultLimits(string $level): array
-    {
-        $limits = [
-            'guest' => ['daily_conversations' => 3, 'daily_messages' => 20],
-            'free' => ['daily_conversations' => 10, 'daily_messages' => 100],
-            'basic' => ['daily_conversations' => 30, 'daily_messages' => 300],
-            'premium' => ['daily_conversations' => 100, 'daily_messages' => 1000],
-            'enterprise' => ['daily_conversations' => -1, 'daily_messages' => -1]
-        ];
-
-        return $limits[$level] ?? $limits['free'];
-    }
 
     /**
      * 驗證用戶資料
@@ -332,6 +316,163 @@ class AiAssistantSDK
         }
 
         return implode("\n                ", $jsLines);
+    }
+
+    /**
+     * 獲取租戶的所有會員等級
+     * 
+     * @return array 會員等級清單
+     * @throws Exception
+     */
+    public function getMembershipTiers(): array
+    {
+        if (!$this->apiToken) {
+            throw new Exception('API token is required for membership tier operations');
+        }
+
+        $response = $this->makeApiRequest('GET', '/api/membership-tiers');
+        return $response;
+    }
+
+    /**
+     * 獲取特定會員等級資訊
+     * 
+     * @param string $slug 等級標識
+     * @return array 會員等級資訊
+     * @throws Exception
+     */
+    public function getMembershipTier(string $slug): array
+    {
+        if (!$this->apiToken) {
+            throw new Exception('API token is required for membership tier operations');
+        }
+
+        $response = $this->makeApiRequest('GET', "/api/membership-tiers/{$slug}");
+        return $response;
+    }
+
+    /**
+     * 檢查用戶使用額度
+     * 
+     * @param string $userId 用戶ID
+     * @param string|null $sessionId 會話ID（匿名用戶）
+     * @return array 額度使用狀況
+     * @throws Exception
+     */
+    public function checkUserQuota(string $userId, ?string $sessionId = null): array
+    {
+        if (!$this->apiToken) {
+            throw new Exception('API token is required for quota operations');
+        }
+
+        $params = ['user_id' => $userId];
+        if ($sessionId) {
+            $params['session_id'] = $sessionId;
+        }
+
+        $response = $this->makeApiRequest('GET', '/api/quota/check', $params);
+        return $response;
+    }
+
+    /**
+     * 分配會員等級給用戶
+     * 
+     * @param string $userId 用戶ID
+     * @param string $tierSlug 等級標識
+     * @return array 操作結果
+     * @throws Exception
+     */
+    public function assignMembershipTier(string $userId, string $tierSlug): array
+    {
+        if (!$this->apiToken) {
+            throw new Exception('API token is required for membership operations');
+        }
+
+        $data = [
+            'user_id' => $userId,
+            'tier_slug' => $tierSlug
+        ];
+
+        $response = $this->makeApiRequest('POST', '/api/membership/assign', $data);
+        return $response;
+    }
+
+    /**
+     * 重置用戶每日使用量
+     * 
+     * @param string $userId 用戶ID
+     * @param string|null $sessionId 會話ID（匿名用戶）
+     * @return array 操作結果
+     * @throws Exception
+     */
+    public function resetUserQuota(string $userId, ?string $sessionId = null): array
+    {
+        if (!$this->apiToken) {
+            throw new Exception('API token is required for quota operations');
+        }
+
+        $data = ['user_id' => $userId];
+        if ($sessionId) {
+            $data['session_id'] = $sessionId;
+        }
+
+        $response = $this->makeApiRequest('POST', '/api/quota/reset', $data);
+        return $response;
+    }
+
+    /**
+     * 執行 API 請求
+     * 
+     * @param string $method HTTP 方法
+     * @param string $endpoint API 端點
+     * @param array $data 請求資料
+     * @return array API 回應
+     * @throws Exception
+     */
+    private function makeApiRequest(string $method, string $endpoint, array $data = []): array
+    {
+        $url = rtrim($this->apiUrl, '/') . $endpoint;
+        
+        $options = [
+            'http' => [
+                'method' => $method,
+                'header' => [
+                    'Authorization: Bearer ' . $this->apiToken,
+                    'Content-Type: application/json',
+                    'Accept: application/json'
+                ],
+                'ignore_errors' => true
+            ]
+        ];
+
+        if ($method === 'GET' && !empty($data)) {
+            $url .= '?' . http_build_query($data);
+        } elseif ($method !== 'GET' && !empty($data)) {
+            $options['http']['content'] = json_encode($data);
+        }
+
+        $context = stream_context_create($options);
+        $response = file_get_contents($url, false, $context);
+        
+        if ($response === false) {
+            throw new Exception('Failed to make API request');
+        }
+
+        $decodedResponse = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Invalid JSON response from API');
+        }
+
+        // 檢查 HTTP 狀態碼
+        if (isset($http_response_header[0])) {
+            $statusCode = (int) substr($http_response_header[0], 9, 3);
+            if ($statusCode >= 400) {
+                $errorMessage = $decodedResponse['message'] ?? 'API request failed';
+                throw new Exception("API Error ({$statusCode}): {$errorMessage}");
+            }
+        }
+
+        return $decodedResponse;
     }
 
 }
