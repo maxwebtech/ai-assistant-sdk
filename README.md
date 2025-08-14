@@ -153,6 +153,45 @@ $limits = AiAssistantSDK::getDefaultLimits('premium');
 | premium | 100 | 1000 | 付費會員 |
 | enterprise | -1 | -1 | 企業會員（無限制） |
 
+### 查詢使用者剩餘限制
+
+```php
+// 獲取使用者的使用狀況和剩餘限制
+try {
+    $usageStatus = $sdk->getUserUsageStatus($user['id']);
+    
+    echo "會員等級: " . $usageStatus['membership_level'] . "\n";
+    echo "對話使用狀況:\n";
+    echo "  已使用: " . $usageStatus['usage']['daily_conversations']['used'] . "\n";
+    echo "  限制: " . $usageStatus['usage']['daily_conversations']['limit'] . "\n";
+    echo "  剩餘: " . $usageStatus['usage']['daily_conversations']['remaining'] . "\n";
+    
+    echo "訊息使用狀況:\n";
+    echo "  已使用: " . $usageStatus['usage']['daily_messages']['used'] . "\n";
+    echo "  限制: " . $usageStatus['usage']['daily_messages']['limit'] . "\n";
+    echo "  剩餘: " . $usageStatus['usage']['daily_messages']['remaining'] . "\n";
+    
+    if ($usageStatus['reset_time']) {
+        echo "重置時間: " . $usageStatus['reset_time'] . "\n";
+    }
+    
+    // 檢查是否為無限制方案
+    if ($usageStatus['usage']['daily_conversations']['unlimited']) {
+        echo "對話: 無限制\n";
+    }
+    
+} catch (Exception $e) {
+    echo "查詢失敗: " . $e->getMessage();
+}
+```
+
+### 使用自訂 Token 查詢
+
+```php
+// 使用特定的認證 token 查詢
+$usageStatus = $sdk->getUserUsageStatus($user['id'], 'custom_auth_token');
+```
+
 ### 自訂限制
 
 ```php

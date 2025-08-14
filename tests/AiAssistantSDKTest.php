@@ -209,4 +209,107 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContains('Chat &quot;Title&quot; &amp; More', $html);
         $this->assertStringNotContains('Chat "Title" & More', $html);
     }
+
+    public function testGetUserUsageStatusRequiresUserId(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('User ID is required');
+
+        $this->sdk->getUserUsageStatus('');
+    }
+
+    public function testGetUserUsageStatusRequiresToken(): void
+    {
+        $sdk = new AiAssistantSDK([
+            'api_url' => 'http://localhost:8000'
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Authentication token is required');
+
+        $sdk->getUserUsageStatus('test_user_123');
+    }
+
+    public function testGetUserUsageStatusFormatsResponse(): void
+    {
+        // 這個測試需要 mock API 回應
+        // 在實際環境中，你可能需要使用 PHPUnit 的 mock 功能或測試 HTTP client
+        
+        $sdk = new AiAssistantSDK([
+            'widget_token' => 'wt_test_token',
+            'api_url' => 'http://localhost:8000'
+        ]);
+
+        // 測試方法的格式化功能
+        $reflection = new \ReflectionClass($sdk);
+        $method = $reflection->getMethod('formatUsageResponse');
+        $method->setAccessible(true);
+
+        $mockApiResponse = [
+            'user_id' => 'test_123',
+            'membership_level' => 'premium',
+            'usage' => [
+                'daily_conversations' => [
+                    'used' => 5,
+                    'limit' => 100,
+                    'remaining' => 95,
+                    'unlimited' => false
+                ],
+                'daily_messages' => [
+                    'used' => 50,
+                    'limit' => 1000,
+                    'remaining' => 950,
+                    'unlimited' => false
+                ]
+            ],
+            'reset_time' => '2024-01-01T00:00:00Z',
+            'features' => ['file_upload', 'voice_chat']
+        ];
+
+        $formattedResponse = $method->invoke($sdk, $mockApiResponse);
+
+        $this->assertEquals('test_123', $formattedResponse['user_id']);
+        $this->assertEquals('premium', $formattedResponse['membership_level']);
+        $this->assertEquals(5, $formattedResponse['usage']['daily_conversations']['used']);
+        $this->assertEquals(95, $formattedResponse['usage']['daily_conversations']['remaining']);
+        $this->assertEquals(950, $formattedResponse['usage']['daily_messages']['remaining']);
+        $this->assertContains('file_upload', $formattedResponse['features']);
+    }
+
+    public function testGetUserUsageStatusHandlesUnlimitedPlan(): void
+    {
+        $sdk = new AiAssistantSDK([
+            'widget_token' => 'wt_test_token',
+            'api_url' => 'http://localhost:8000'
+        ]);
+
+        $reflection = new \ReflectionClass($sdk);
+        $method = $reflection->getMethod('formatUsageResponse');
+        $method->setAccessible(true);
+
+        $mockApiResponse = [
+            'user_id' => 'enterprise_user',
+            'membership_level' => 'enterprise',
+            'usage' => [
+                'daily_conversations' => [
+                    'used' => 500,
+                    'limit' => -1,
+                    'remaining' => -1,
+                    'unlimited' => true
+                ],
+                'daily_messages' => [
+                    'used' => 5000,
+                    'limit' => -1,
+                    'remaining' => -1,
+                    'unlimited' => true
+                ]
+            ]
+        ];
+
+        $formattedResponse = $method->invoke($sdk, $mockApiResponse);
+
+        $this->assertTrue($formattedResponse['usage']['daily_conversations']['unlimited']);
+        $this->assertTrue($formattedResponse['usage']['daily_messages']['unlimited']);
+        $this->assertEquals(-1, $formattedResponse['usage']['daily_conversations']['limit']);
+    }
 }
