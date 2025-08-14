@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace MaxWebTech\AiAssistant;
 
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use InvalidArgumentException;
 use Exception;
 
@@ -23,8 +21,6 @@ class AiAssistantSDK
 {
     private ?string $widgetToken;
     private ?string $iframeToken;
-    private string $jwtSecret;
-    private ?string $issuer;
     private string $apiUrl;
 
     /**
@@ -34,52 +30,9 @@ class AiAssistantSDK
     {
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
-        $this->jwtSecret = $config['jwt_secret'] ?? throw new InvalidArgumentException('JWT secret is required');
-        $this->issuer = $config['issuer'] ?? null;
         $this->apiUrl = $config['api_url'] ?? 'http://localhost:8000';
     }
 
-    /**
-     * 為用戶生成 JWT Token
-     * 
-     * @param array $user 用戶資料 ['id', 'name', 'email']
-     * @param array $membership 會員設定 ['level', 'daily_conversation_limit', 'daily_message_limit', 'features']
-     * @return string JWT token
-     * @throws Exception
-     */
-    public function generateJWT(array $user, array $membership = []): string
-    {
-        if (!class_exists('Firebase\JWT\JWT')) {
-            throw new Exception('Firebase JWT library is required. Run: composer require firebase/php-jwt');
-        }
-
-        $this->validateUserData($user);
-
-        $now = time();
-        $payload = [
-            'iss' => $this->issuer,
-            'aud' => $this->apiUrl,
-            'sub' => $user['id'],
-            'iat' => $now,
-            'exp' => $now + 3600, // 1小時過期
-            'jti' => uniqid('jwt_', true) . '_' . $now,
-            
-            'user' => [
-                'id' => $user['id'],
-                'name' => $user['name'] ?? '',
-                'email' => $user['email'] ?? ''
-            ],
-            
-            'membership' => array_merge([
-                'level' => 'free',
-                'daily_conversation_limit' => 10,
-                'daily_message_limit' => 100,
-                'features' => []
-            ], $membership)
-        ];
-
-        return JWT::encode($payload, $this->jwtSecret, 'HS256');
-    }
 
     /**
      * 生成 Widget HTML 代碼
@@ -95,12 +48,21 @@ class AiAssistantSDK
             throw new Exception('Widget token is required');
         }
 
-        $jwt = $this->generateJWT($user, $options['membership'] ?? []);
+        $this->validateUserData($user);
         
         $attributes = [
             'data-ai-chat-token' => $this->widgetToken,
-            'data-jwt' => $jwt
+            'data-user-id' => $user['id'],
+            'data-user-name' => $user['name'] ?? '',
+            'data-user-email' => $user['email'] ?? ''
         ];
+
+        // 會員資料
+        if (isset($options['membership'])) {
+            foreach ($options['membership'] as $key => $value) {
+                $attributes["data-membership-{$key}"] = is_array($value) ? json_encode($value) : $value;
+            }
+        }
 
         // 可選屬性
         foreach (['title', 'placeholder', 'theme', 'position'] as $attr) {
@@ -132,15 +94,25 @@ class AiAssistantSDK
             throw new Exception('iframe token is required');
         }
 
-        $jwt = $this->generateJWT($user, $options['membership'] ?? []);
+        $this->validateUserData($user);
         
-        $params = http_build_query([
+        $params = [
             'token' => $this->iframeToken,
-            'jwt' => $jwt,
+            'user_id' => $user['id'],
+            'user_name' => $user['name'] ?? '',
+            'user_email' => $user['email'] ?? '',
             'title' => $options['title'] ?? 'AI 助手',
             'placeholder' => $options['placeholder'] ?? '輸入您的訊息...'
-        ]);
+        ];
 
+        // 添加會員資料到參數
+        if (isset($options['membership'])) {
+            foreach ($options['membership'] as $key => $value) {
+                $params["membership_{$key}"] = is_array($value) ? json_encode($value) : $value;
+            }
+        }
+
+        $queryString = http_build_query($params);
         $width = $options['width'] ?? '400';
         $height = $options['height'] ?? '600';
         $style = $options['style'] ?? 'border: none; border-radius: 12px;';
@@ -148,7 +120,7 @@ class AiAssistantSDK
         return sprintf(
             '<iframe src="%s/widget-iframe?%s" width="%s" height="%s" style="%s"></iframe>',
             $this->apiUrl,
-            $params,
+            $queryString,
             $width,
             $height,
             $style
@@ -169,9 +141,9 @@ class AiAssistantSDK
             throw new Exception('Widget token is required');
         }
 
-        $jwt = $this->generateJWT($user, $options['membership'] ?? []);
+        $this->validateUserData($user);
         
-        $jsAttributes = $this->generateJSAttributes($options);
+        $jsAttributes = $this->generateJSAttributes($user, $options);
 
         return sprintf(
             "
@@ -179,38 +151,22 @@ class AiAssistantSDK
                 const script = document.createElement('script');
                 script.src = '%s/widget/ai-chat-widget.js';
                 script.setAttribute('data-ai-chat-token', '%s');
-                script.setAttribute('data-jwt', '%s');
+                script.setAttribute('data-user-id', '%s');
+                script.setAttribute('data-user-name', '%s');
+                script.setAttribute('data-user-email', '%s');
                 %s
                 document.body.appendChild(script);
             })();
             ",
             $this->apiUrl,
             $this->widgetToken,
-            $jwt,
+            addslashes($user['id']),
+            addslashes($user['name'] ?? ''),
+            addslashes($user['email'] ?? ''),
             $jsAttributes
         );
     }
 
-    /**
-     * 驗證 JWT Token
-     * 
-     * @param string $jwt JWT token
-     * @return array 解析後的資料
-     * @throws Exception
-     */
-    public function validateJWT(string $jwt): array
-    {
-        if (!class_exists('Firebase\JWT\JWT')) {
-            throw new Exception('Firebase JWT library is required');
-        }
-
-        try {
-            $decoded = JWT::decode($jwt, new Key($this->jwtSecret, 'HS256'));
-            return (array) $decoded;
-        } catch (Exception $e) {
-            throw new Exception('JWT validation failed: ' . $e->getMessage());
-        }
-    }
 
     /**
      * 獲取會員等級的預設限制
@@ -256,10 +212,22 @@ class AiAssistantSDK
     /**
      * 生成 JavaScript 屬性設定代碼
      */
-    private function generateJSAttributes(array $options): string
+    private function generateJSAttributes(array $user, array $options): string
     {
         $jsLines = [];
         
+        // 會員資料屬性
+        if (isset($options['membership'])) {
+            foreach ($options['membership'] as $key => $value) {
+                $jsLines[] = sprintf(
+                    "script.setAttribute('data-membership-%s', '%s');",
+                    $key,
+                    addslashes(is_array($value) ? json_encode($value) : (string)$value)
+                );
+            }
+        }
+        
+        // 其他可選屬性
         foreach (['title', 'placeholder', 'theme', 'position'] as $attr) {
             if (isset($options[$attr])) {
                 $jsLines[] = sprintf(
