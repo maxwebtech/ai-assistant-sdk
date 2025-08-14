@@ -22,7 +22,6 @@ class AiAssistantSDK
     private ?string $widgetToken;
     private ?string $iframeToken;
     private string $apiUrl;
-    private ?string $apiToken;
 
     /**
      * SDK 設定
@@ -32,7 +31,6 @@ class AiAssistantSDK
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
         $this->apiUrl = $config['api_url'] ?? 'https://kitten-flowing-donkey.ngrok-free.app';
-        $this->apiToken = $config['api_token'] ?? null;
     }
 
 
@@ -326,11 +324,11 @@ class AiAssistantSDK
      */
     public function getMembershipTiers(): array
     {
-        if (!$this->apiToken) {
-            throw new Exception('API token is required for membership tier operations');
+        if (!$this->widgetToken) {
+            throw new Exception('Widget token is required for membership tier operations');
         }
 
-        $response = $this->makeApiRequest('GET', '/api/membership-tiers');
+        $response = $this->makeApiRequest('GET', '/api/tenant/membership-tiers');
         return $response;
     }
 
@@ -343,11 +341,11 @@ class AiAssistantSDK
      */
     public function getMembershipTier(string $slug): array
     {
-        if (!$this->apiToken) {
-            throw new Exception('API token is required for membership tier operations');
+        if (!$this->widgetToken) {
+            throw new Exception('Widget token is required for membership tier operations');
         }
 
-        $response = $this->makeApiRequest('GET', "/api/membership-tiers/{$slug}");
+        $response = $this->makeApiRequest('GET', "/api/tenant/membership-tiers/{$slug}");
         return $response;
     }
 
@@ -361,8 +359,8 @@ class AiAssistantSDK
      */
     public function checkUserQuota(string $userId, ?string $sessionId = null): array
     {
-        if (!$this->apiToken) {
-            throw new Exception('API token is required for quota operations');
+        if (!$this->widgetToken) {
+            throw new Exception('Widget token is required for quota operations');
         }
 
         $params = ['user_id' => $userId];
@@ -370,7 +368,7 @@ class AiAssistantSDK
             $params['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('GET', '/api/quota/check', $params);
+        $response = $this->makeApiRequest('GET', '/api/tenant/quota/check', $params);
         return $response;
     }
 
@@ -384,8 +382,8 @@ class AiAssistantSDK
      */
     public function assignMembershipTier(string $userId, string $tierSlug): array
     {
-        if (!$this->apiToken) {
-            throw new Exception('API token is required for membership operations');
+        if (!$this->widgetToken) {
+            throw new Exception('Widget token is required for membership operations');
         }
 
         $data = [
@@ -393,7 +391,7 @@ class AiAssistantSDK
             'tier_slug' => $tierSlug
         ];
 
-        $response = $this->makeApiRequest('POST', '/api/membership/assign', $data);
+        $response = $this->makeApiRequest('POST', '/api/tenant/membership/assign', $data);
         return $response;
     }
 
@@ -407,8 +405,8 @@ class AiAssistantSDK
      */
     public function resetUserQuota(string $userId, ?string $sessionId = null): array
     {
-        if (!$this->apiToken) {
-            throw new Exception('API token is required for quota operations');
+        if (!$this->widgetToken) {
+            throw new Exception('Widget token is required for quota operations');
         }
 
         $data = ['user_id' => $userId];
@@ -416,7 +414,7 @@ class AiAssistantSDK
             $data['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('POST', '/api/quota/reset', $data);
+        $response = $this->makeApiRequest('POST', '/api/tenant/quota/reset', $data);
         return $response;
     }
 
@@ -433,11 +431,12 @@ class AiAssistantSDK
     {
         $url = rtrim($this->apiUrl, '/') . $endpoint;
         
+        // 使用 Widget Token 進行認證（和其他 Widget API 一樣）
         $options = [
             'http' => [
                 'method' => $method,
                 'header' => [
-                    'Authorization: Bearer ' . $this->apiToken,
+                    'Authorization: Bearer ' . $this->widgetToken,
                     'Content-Type: application/json',
                     'Accept: application/json'
                 ],
