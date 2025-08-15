@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v4.0.0...v5.0.0) (2025-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* JWT secret is now required for quota and membership operations
+
+### Bug Fixes
+
+* Use JWT authentication for quota and membership API methods ([9f94f50](https://github.com/maxwebtech/ai-assistant-sdk/commit/9f94f500de2bb77ba6c7600b1f0cfd8e22fc2d5f))
+
+
+### Miscellaneous Chores
+
+* Remove release-please manifest and clean up versioning ([2deccf9](https://github.com/maxwebtech/ai-assistant-sdk/commit/2deccf916c456f024d23609d5594e30009c1e8a2))
+
 ## 4.0.0 (2025-08-15)
 
 
