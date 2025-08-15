@@ -302,11 +302,11 @@ class AiAssistantSDK
         // 使用 API 提供的剩餘數量和限制
         $conversationLimit = $tier['daily_conversation_limit'] ?? null;
         $conversationUsed = $usage['conversations'] ?? 0;
-        $conversationRemaining = $remaining['conversations'];
+        $conversationRemaining = $remaining['conversations'] ?? null;
         
         $messageLimit = $tier['daily_message_limit'] ?? null;
         $messageUsed = $usage['messages'] ?? 0;
-        $messageRemaining = $remaining['messages'];
+        $messageRemaining = $remaining['messages'] ?? null;
         
         return [
             'daily_conversations' => [
