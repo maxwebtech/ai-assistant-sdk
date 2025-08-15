@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.3...v7.0.0) (2025-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sdk:** The SDK no longer generates JWTs internally. Provide a server-signed JWT via options.jwt for widget/iframe and all quota/membership APIs. Removed generateJWT/generateUserJWT. checkUserQuota/getMembershipTiers/assignMembershipTier/resetUserQuota now require an external JWT.
+
+### Features
+
+* **sdk:** require external JWT; remove auto-generation ([e04e822](https://github.com/maxwebtech/ai-assistant-sdk/commit/e04e8220dbedbc3022fbf30b3eaeb9391be2d8ce))
+
 ## [6.1.3](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.2...v6.1.3) (2025-08-15)
 
 
