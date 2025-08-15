@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.0.0...v6.0.1) (2025-08-15)
+
+
+### Bug Fixes
+
+* Add required 'sub' field to JWT payload for server validation ([48f8d01](https://github.com/maxwebtech/ai-assistant-sdk/commit/48f8d01f174dbc6bb3c788e36ffdfda5fc709eeb))
+
 ## [6.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v5.0.0...v6.0.0) (2025-08-15)
 
 
