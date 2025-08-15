@@ -268,11 +268,12 @@ class AiAssistantSDK
      * 檢查用戶使用額度
      * 
      * @param string $userId 用戶ID
+     * @param int $tenantId 租戶ID
      * @param string|null $sessionId 會話ID（匿名用戶）
      * @return array 額度使用狀況
      * @throws Exception
      */
-    public function checkUserQuota(string $userId, ?string $sessionId = null): array
+    public function checkUserQuota(string $userId, int $tenantId, ?string $sessionId = null): array
     {
         if (!$this->jwtSecret) {
             throw new Exception('JWT secret is required for quota operations');
@@ -284,6 +285,7 @@ class AiAssistantSDK
         }
 
         $jwt = $this->generateJWT([
+            'tenant_id' => $tenantId,
             'action' => 'check_quota'
         ]);
 
@@ -296,10 +298,11 @@ class AiAssistantSDK
      * 
      * @param string $userId 用戶ID
      * @param string $tierSlug 等級標識
+     * @param int $tenantId 租戶ID
      * @return array 操作結果
      * @throws Exception
      */
-    public function assignMembershipTier(string $userId, string $tierSlug): array
+    public function assignMembershipTier(string $userId, string $tierSlug, int $tenantId): array
     {
         if (!$this->jwtSecret) {
             throw new Exception('JWT secret is required for membership operations');
@@ -311,6 +314,7 @@ class AiAssistantSDK
         ];
 
         $jwt = $this->generateJWT([
+            'tenant_id' => $tenantId,
             'action' => 'assign_membership'
         ]);
 
@@ -322,11 +326,12 @@ class AiAssistantSDK
      * 重置用戶每日使用量
      * 
      * @param string $userId 用戶ID
+     * @param int $tenantId 租戶ID
      * @param string|null $sessionId 會話ID（匿名用戶）
      * @return array 操作結果
      * @throws Exception
      */
-    public function resetUserQuota(string $userId, ?string $sessionId = null): array
+    public function resetUserQuota(string $userId, int $tenantId, ?string $sessionId = null): array
     {
         if (!$this->jwtSecret) {
             throw new Exception('JWT secret is required for quota operations');
@@ -338,6 +343,7 @@ class AiAssistantSDK
         }
 
         $jwt = $this->generateJWT([
+            'tenant_id' => $tenantId,
             'action' => 'reset_quota'
         ]);
 
