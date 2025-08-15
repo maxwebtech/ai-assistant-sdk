@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v1.0.0...v1.0.1) (2025-08-15)
+
+
+### Miscellaneous Chores
+
+* Fix version numbering to 4.0.0 ([a28706c](https://github.com/maxwebtech/ai-assistant-sdk/commit/a28706c38abde18fc7d2d0eac0098ba45c47bd59))
+* Update .gitignore and add composer.lock ([4b9a52e](https://github.com/maxwebtech/ai-assistant-sdk/commit/4b9a52e613dd8a1e3ab99c216cc13d9e233adbbd))
+
 ## 4.0.0 (2025-08-15)
 
 
