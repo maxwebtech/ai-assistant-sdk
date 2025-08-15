@@ -313,13 +313,13 @@ class AiAssistantSDK
                 'used' => $conversationUsed,
                 'remaining' => $conversationRemaining,
                 'limit' => $conversationLimit,
-                'unlimited' => $conversationRemaining === null
+                'unlimited' => $conversationLimit === null
             ],
             'daily_messages' => [
                 'used' => $messageUsed,
                 'remaining' => $messageRemaining,
                 'limit' => $messageLimit,
-                'unlimited' => $messageRemaining === null
+                'unlimited' => $messageLimit === null
             ],
             'membership_level' => $tier['slug'] ?? 'free',
             'reset_time' => $data['reset_time'] ?? '每日 00:00'
