@@ -297,33 +297,29 @@ class AiAssistantSDK
         $data = $response['data'];
         $tier = $data['tier'] ?? null;
         $usage = $data['usage'] ?? [];
+        $remaining = $data['remaining'] ?? [];
         
-        // 計算對話限額和剩餘
+        // 使用 API 提供的剩餘數量和限制
         $conversationLimit = $tier['daily_conversation_limit'] ?? null;
         $conversationUsed = $usage['conversations'] ?? 0;
-        $conversationRemaining = $conversationLimit === null 
-            ? null // 無限制
-            : max(0, $conversationLimit - $conversationUsed);
+        $conversationRemaining = $remaining['conversations'];
         
-        // 計算訊息限額和剩餘
         $messageLimit = $tier['daily_message_limit'] ?? null;
         $messageUsed = $usage['messages'] ?? 0;
-        $messageRemaining = $messageLimit === null 
-            ? null // 無限制
-            : max(0, $messageLimit - $messageUsed);
+        $messageRemaining = $remaining['messages'];
         
         return [
             'daily_conversations' => [
                 'used' => $conversationUsed,
                 'remaining' => $conversationRemaining,
                 'limit' => $conversationLimit,
-                'unlimited' => $conversationLimit === null
+                'unlimited' => $conversationRemaining === null
             ],
             'daily_messages' => [
                 'used' => $messageUsed,
                 'remaining' => $messageRemaining,
                 'limit' => $messageLimit,
-                'unlimited' => $messageLimit === null
+                'unlimited' => $messageRemaining === null
             ],
             'membership_level' => $tier['slug'] ?? 'free',
             'reset_time' => $data['reset_time'] ?? '每日 00:00'
