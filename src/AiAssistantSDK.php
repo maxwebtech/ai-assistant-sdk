@@ -193,98 +193,6 @@ class AiAssistantSDK
         return $attributeString;
     }
 
-    /**
-     * 獲取使用者的使用狀況和剩餘限制
-     * 
-     * @param string $userId 使用者 ID
-     * @param string|null $authToken 驗證 token (widget_token 或 iframe_token)
-     * @return array 包含使用狀況和剩餘限制的陣列
-     * @throws Exception 當 API 請求失敗時
-     */
-    public function getUserUsageStatus(string $userId, ?string $authToken = null): array
-    {
-        if (empty($userId)) {
-            throw new InvalidArgumentException('User ID is required');
-        }
-
-        // 使用提供的 token 或預設使用 widget_token
-        $token = $authToken ?? $this->widgetToken ?? $this->iframeToken;
-        
-        if (!$token) {
-            throw new Exception('Authentication token is required');
-        }
-
-        $apiEndpoint = $this->apiUrl . '/api/v1/usage-status';
-        
-        // 準備請求參數
-        $params = [
-            'user_id' => $userId,
-            'token' => $token
-        ];
-
-        // 發送 API 請求
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $apiEndpoint . '?' . http_build_query($params));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Accept: application/json',
-            'Content-Type: application/json'
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($error) {
-            throw new Exception('API request failed: ' . $error);
-        }
-
-        if ($httpCode !== 200) {
-            $errorData = json_decode($response, true);
-            $errorMessage = $errorData['message'] ?? 'Unknown error';
-            throw new Exception('API error (HTTP ' . $httpCode . '): ' . $errorMessage);
-        }
-
-        $data = json_decode($response, true);
-        
-        if (!$data) {
-            throw new Exception('Invalid API response');
-        }
-
-        return $this->formatUsageResponse($data);
-    }
-
-    /**
-     * 格式化使用狀況回應
-     * 
-     * @param array $data API 回應資料
-     * @return array 格式化的使用狀況資料
-     */
-    private function formatUsageResponse(array $data): array
-    {
-        return [
-            'user_id' => $data['user_id'] ?? '',
-            'membership_level' => $data['membership_level'] ?? 'free',
-            'usage' => [
-                'daily_conversations' => [
-                    'used' => $data['usage']['daily_conversations']['used'] ?? 0,
-                    'limit' => $data['usage']['daily_conversations']['limit'] ?? 0,
-                    'remaining' => $data['usage']['daily_conversations']['remaining'] ?? 0,
-                    'unlimited' => $data['usage']['daily_conversations']['unlimited'] ?? false
-                ],
-                'daily_messages' => [
-                    'used' => $data['usage']['daily_messages']['used'] ?? 0,
-                    'limit' => $data['usage']['daily_messages']['limit'] ?? 0,
-                    'remaining' => $data['usage']['daily_messages']['remaining'] ?? 0,
-                    'unlimited' => $data['usage']['daily_messages']['unlimited'] ?? false
-                ]
-            ],
-            'reset_time' => $data['reset_time'] ?? null,
-            'features' => $data['features'] ?? []
-        ];
-    }
 
     /**
      * 生成 JavaScript 屬性設定代碼
@@ -352,7 +260,7 @@ class AiAssistantSDK
             throw new Exception('Widget token is required for membership tier operations');
         }
 
-        $response = $this->makeApiRequest('GET', "/api/tenant/membership-tiers/{$slug}");
+        $response = $this->makeApiRequest('GET', "/api/membership-tiers/{$slug}");
         return $response;
     }
 
@@ -375,7 +283,7 @@ class AiAssistantSDK
             $params['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('GET', '/api/tenant/quota/check', $params);
+        $response = $this->makeApiRequest('GET', '/api/quota/check', $params);
         return $response;
     }
 
@@ -398,7 +306,7 @@ class AiAssistantSDK
             'tier_slug' => $tierSlug
         ];
 
-        $response = $this->makeApiRequest('POST', '/api/tenant/membership/assign', $data);
+        $response = $this->makeApiRequest('POST', '/api/membership/assign', $data);
         return $response;
     }
 
@@ -421,7 +329,7 @@ class AiAssistantSDK
             $data['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('POST', '/api/tenant/quota/reset', $data);
+        $response = $this->makeApiRequest('POST', '/api/quota/reset', $data);
         return $response;
     }
 
