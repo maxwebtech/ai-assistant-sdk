@@ -25,7 +25,7 @@ class AiAssistantSDK
 
     private string $apiUrl;
 
-    private ?string $jwtSecret;
+    // SDK 不簽發 JWT；僅接受外部提供的 JWT。
 
     /**
      * SDK 設定
@@ -34,8 +34,8 @@ class AiAssistantSDK
     {
         $this->widgetToken = $config['widget_token'] ?? null;
         $this->iframeToken = $config['iframe_token'] ?? null;
-        $this->apiUrl = $config['api_url'] ?? 'https://kitten-flowing-donkey.ngrok-free.app';
-        $this->jwtSecret = $config['jwt_secret'] ?? null;
+        $this->apiUrl = $config['api_url'] ?? 'http://localhost:8000';
+        // 不處理 jwt_secret/tenant_id/issuer，請於服務端簽發
     }
 
     /**
@@ -57,10 +57,18 @@ class AiAssistantSDK
 
         $attributes = [
             'data-ai-chat-token' => $this->widgetToken,
-            'data-user-id' => $user['id'],
-            'data-user-name' => $user['name'] ?? '',
-            'data-user-email' => $user['email'] ?? '',
         ];
+
+        // 若有外部 JWT 就用；否則退回 member-id
+        $externalJwt = $options['jwt'] ?? null;
+        if ($externalJwt) {
+            $attributes['data-jwt'] = (string) $externalJwt;
+        } else {
+            $attributes['data-member-id'] = (string) $user['id'];
+            if (! empty($options['membership']['level'])) {
+                $attributes['data-membership-level'] = (string) $options['membership']['level'];
+            }
+        }
 
         // 會員資料
         if (isset($options['membership'])) {
@@ -104,12 +112,21 @@ class AiAssistantSDK
 
         $params = [
             'token' => $this->iframeToken,
-            'user_id' => $user['id'],
-            'user_name' => $user['name'] ?? '',
-            'user_email' => $user['email'] ?? '',
             'title' => $options['title'] ?? 'AI 助手',
             'placeholder' => $options['placeholder'] ?? '輸入您的訊息...',
         ];
+
+        $externalJwt = $options['jwt'] ?? null;
+        if ($externalJwt) {
+            $params['jwt'] = (string) $externalJwt;
+        } else {
+            $params['user_id'] = $user['id'];
+            $params['user_name'] = $user['name'] ?? '';
+            $params['user_email'] = $user['email'] ?? '';
+            if (! empty($options['membership']['level'])) {
+                $params['membership_level'] = (string) $options['membership']['level'];
+            }
+        }
 
         // 添加會員資料到參數
         if (isset($options['membership'])) {
@@ -158,18 +175,14 @@ class AiAssistantSDK
                 const script = document.createElement('script');
                 script.src = '%s/widget/ai-chat-widget.js';
                 script.setAttribute('data-ai-chat-token', '%s');
-                script.setAttribute('data-user-id', '%s');
-                script.setAttribute('data-user-name', '%s');
-                script.setAttribute('data-user-email', '%s');
+                %s
                 %s
                 document.body.appendChild(script);
             })();
             ",
             $this->apiUrl,
             $this->widgetToken,
-            addslashes($user['id']),
-            addslashes($user['name'] ?? ''),
-            addslashes($user['email'] ?? ''),
+            $this->buildDynamicIdentityAttributes($user, $options),
             $jsAttributes
         );
     }
@@ -204,7 +217,7 @@ class AiAssistantSDK
     {
         $jsLines = [];
 
-        // 會員資料屬性
+        // 會員資料屬性（選填）
         if (isset($options['membership'])) {
             foreach ($options['membership'] as $key => $value) {
                 $jsLines[] = sprintf(
@@ -230,24 +243,32 @@ class AiAssistantSDK
     }
 
     /**
+     * 建立身份屬性設定（JWT 或 member-id）
+     */
+    private function buildDynamicIdentityAttributes(array $user, array $options): string
+    {
+        $externalJwt = $options['jwt'] ?? null;
+        if ($externalJwt) {
+            return sprintf("script.setAttribute('data-jwt', '%s');", addslashes((string) $externalJwt));
+        }
+        $lines = [];
+        $lines[] = sprintf("script.setAttribute('data-member-id', '%s');", addslashes((string) $user['id']));
+        if (! empty($options['membership']['level'])) {
+            $lines[] = sprintf("script.setAttribute('data-membership-level', '%s');", addslashes((string) $options['membership']['level']));
+        }
+
+        return implode("\n                ", $lines);
+    }
+
+    /**
      * 獲取租戶的所有會員等級
      *
      * @return array 會員等級清單
      *
      * @throws Exception
      */
-    public function getMembershipTiers(int $tenantId): array
+    public function getMembershipTiers(int $tenantId, string $jwt): array
     {
-        if (! $this->jwtSecret) {
-            throw new Exception('JWT secret is required for membership tier operations');
-        }
-
-        $jwt = $this->generateJWT([
-            'sub' => 'system',  // Use 'system' as identifier for administrative operations
-            'tenant_id' => $tenantId,
-            'action' => 'get_membership_tiers',
-        ]);
-
         $response = $this->makeApiRequestWithJWT('GET', '/api/membership-tiers', [], $jwt);
 
         return $response;
@@ -282,10 +303,10 @@ class AiAssistantSDK
      *
      * @throws Exception
      */
-    public function checkUserQuota(string $userId, int $tenantId, ?string $sessionId = null): array
+    public function checkUserQuota(string $userId, int $tenantId, ?string $sessionId = null, ?string $membershipLevel = null, ?string $jwt = null): array
     {
-        if (! $this->jwtSecret) {
-            throw new Exception('JWT secret is required for quota operations');
+        if (! $jwt) {
+            throw new Exception('JWT is required for quota operations. Please pass a signed JWT.');
         }
 
         $params = ['user_id' => $userId];
@@ -293,11 +314,7 @@ class AiAssistantSDK
             $params['session_id'] = $sessionId;
         }
 
-        $jwt = $this->generateJWT([
-            'sub' => $userId,
-            'tenant_id' => $tenantId,
-            'action' => 'check_quota',
-        ]);
+        // 使用外部提供的 JWT 呼叫 API
 
         $response = $this->makeApiRequestWithJWT('GET', '/api/quota/check', $params, $jwt);
 
@@ -368,22 +385,12 @@ class AiAssistantSDK
      *
      * @throws Exception
      */
-    public function assignMembershipTier(string $userId, string $tierSlug, int $tenantId): array
+    public function assignMembershipTier(string $userId, string $tierSlug, int $tenantId, string $jwt): array
     {
-        if (! $this->jwtSecret) {
-            throw new Exception('JWT secret is required for membership operations');
-        }
-
         $data = [
             'user_id' => $userId,
             'tier_slug' => $tierSlug,
         ];
-
-        $jwt = $this->generateJWT([
-            'sub' => $userId,
-            'tenant_id' => $tenantId,
-            'action' => 'assign_membership',
-        ]);
 
         $response = $this->makeApiRequestWithJWT('POST', '/api/membership/assign', $data, $jwt);
 
@@ -400,22 +407,12 @@ class AiAssistantSDK
      *
      * @throws Exception
      */
-    public function resetUserQuota(string $userId, int $tenantId, ?string $sessionId = null): array
+    public function resetUserQuota(string $userId, int $tenantId, string $jwt, ?string $sessionId = null): array
     {
-        if (! $this->jwtSecret) {
-            throw new Exception('JWT secret is required for quota operations');
-        }
-
         $data = ['user_id' => $userId];
         if ($sessionId) {
             $data['session_id'] = $sessionId;
         }
-
-        $jwt = $this->generateJWT([
-            'sub' => $userId,
-            'tenant_id' => $tenantId,
-            'action' => 'reset_quota',
-        ]);
 
         $response = $this->makeApiRequestWithJWT('POST', '/api/quota/reset', $data, $jwt);
 
@@ -479,34 +476,7 @@ class AiAssistantSDK
         return $decodedResponse;
     }
 
-    /**
-     * 生成 JWT Token
-     *
-     * @param  array  $payload  JWT payload
-     * @return string JWT token
-     *
-     * @throws Exception
-     */
-    private function generateJWT(array $payload): string
-    {
-        if (! $this->jwtSecret) {
-            throw new Exception('JWT secret is required');
-        }
-
-        // 檢查是否安裝 Firebase JWT
-        if (! class_exists('Firebase\\JWT\\JWT')) {
-            throw new Exception('Firebase JWT library is required. Run: composer require firebase/php-jwt');
-        }
-
-        $payload = array_merge([
-            'iss' => 'ai-assistant-sdk',
-            'iat' => time(),
-            'exp' => time() + 3600, // 1小時過期
-            'jti' => bin2hex(random_bytes(16)), // 唯一ID防止重放攻擊
-        ], $payload);
-
-        return \Firebase\JWT\JWT::encode($payload, $this->jwtSecret, 'HS256');
-    }
+    // 不提供 JWT 產生方法；請於服務端簽發並於方法參數傳入
 
     /**
      * 使用 JWT 執行 API 請求
