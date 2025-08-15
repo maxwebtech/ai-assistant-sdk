@@ -239,6 +239,7 @@ class AiAssistantSDK
         }
 
         $jwt = $this->generateJWT([
+            'sub' => 'system',  // Use 'system' as identifier for administrative operations
             'tenant_id' => $tenantId,
             'action' => 'get_membership_tiers'
         ]);
@@ -285,6 +286,7 @@ class AiAssistantSDK
         }
 
         $jwt = $this->generateJWT([
+            'sub' => $userId,
             'tenant_id' => $tenantId,
             'action' => 'check_quota'
         ]);
@@ -314,6 +316,7 @@ class AiAssistantSDK
         ];
 
         $jwt = $this->generateJWT([
+            'sub' => $userId,
             'tenant_id' => $tenantId,
             'action' => 'assign_membership'
         ]);
@@ -343,6 +346,7 @@ class AiAssistantSDK
         }
 
         $jwt = $this->generateJWT([
+            'sub' => $userId,
             'tenant_id' => $tenantId,
             'action' => 'reset_quota'
         ]);
