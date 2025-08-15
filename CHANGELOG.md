@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.2](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.1...v6.1.2) (2025-08-15)
+
+
+### Bug Fixes
+
+* Add null coalescing for remaining array keys ([9f6b3ea](https://github.com/maxwebtech/ai-assistant-sdk/commit/9f6b3ea8a42bdab37bac211b5edc25ffb74ba6c8))
+
 ## [6.1.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.0...v6.1.1) (2025-08-15)
 
 
