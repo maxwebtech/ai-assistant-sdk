@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v7.0.0...v7.0.1) (2025-08-15)
+
+
+### Bug Fixes
+
+* Update test assertion to use correct data-member-id attribute ([39b40b7](https://github.com/maxwebtech/ai-assistant-sdk/commit/39b40b72a0b0916122124774944e836adfb9ce4a))
+
 ## [7.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.3...v7.0.0) (2025-08-15)
 
 
