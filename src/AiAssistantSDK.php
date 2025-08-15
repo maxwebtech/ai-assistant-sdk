@@ -292,7 +292,42 @@ class AiAssistantSDK
         ]);
 
         $response = $this->makeApiRequestWithJWT('GET', '/api/quota/check', $params, $jwt);
-        return $response;
+        
+        // 處理新 API 格式並轉換為 SDK 期望的格式
+        $data = $response['data'];
+        $tier = $data['tier'] ?? null;
+        $usage = $data['usage'] ?? [];
+        
+        // 計算對話限額和剩餘
+        $conversationLimit = $tier['daily_conversation_limit'] ?? null;
+        $conversationUsed = $usage['conversations'] ?? 0;
+        $conversationRemaining = $conversationLimit === null 
+            ? null // 無限制
+            : max(0, $conversationLimit - $conversationUsed);
+        
+        // 計算訊息限額和剩餘
+        $messageLimit = $tier['daily_message_limit'] ?? null;
+        $messageUsed = $usage['messages'] ?? 0;
+        $messageRemaining = $messageLimit === null 
+            ? null // 無限制
+            : max(0, $messageLimit - $messageUsed);
+        
+        return [
+            'daily_conversations' => [
+                'used' => $conversationUsed,
+                'remaining' => $conversationRemaining,
+                'limit' => $conversationLimit,
+                'unlimited' => $conversationLimit === null
+            ],
+            'daily_messages' => [
+                'used' => $messageUsed,
+                'remaining' => $messageRemaining,
+                'limit' => $messageLimit,
+                'unlimited' => $messageLimit === null
+            ],
+            'membership_level' => $tier['slug'] ?? 'free',
+            'reset_time' => $data['reset_time'] ?? '每日 00:00'
+        ];
     }
 
     /**
