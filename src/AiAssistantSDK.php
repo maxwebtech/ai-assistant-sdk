@@ -274,8 +274,8 @@ class AiAssistantSDK
      */
     public function checkUserQuota(string $userId, ?string $sessionId = null): array
     {
-        if (!$this->widgetToken) {
-            throw new Exception('Widget token is required for quota operations');
+        if (!$this->jwtSecret) {
+            throw new Exception('JWT secret is required for quota operations');
         }
 
         $params = ['user_id' => $userId];
@@ -283,7 +283,11 @@ class AiAssistantSDK
             $params['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('GET', '/api/quota/check', $params);
+        $jwt = $this->generateJWT([
+            'action' => 'check_quota'
+        ]);
+
+        $response = $this->makeApiRequestWithJWT('GET', '/api/quota/check', $params, $jwt);
         return $response;
     }
 
@@ -297,8 +301,8 @@ class AiAssistantSDK
      */
     public function assignMembershipTier(string $userId, string $tierSlug): array
     {
-        if (!$this->widgetToken) {
-            throw new Exception('Widget token is required for membership operations');
+        if (!$this->jwtSecret) {
+            throw new Exception('JWT secret is required for membership operations');
         }
 
         $data = [
@@ -306,7 +310,11 @@ class AiAssistantSDK
             'tier_slug' => $tierSlug
         ];
 
-        $response = $this->makeApiRequest('POST', '/api/membership/assign', $data);
+        $jwt = $this->generateJWT([
+            'action' => 'assign_membership'
+        ]);
+
+        $response = $this->makeApiRequestWithJWT('POST', '/api/membership/assign', $data, $jwt);
         return $response;
     }
 
@@ -320,8 +328,8 @@ class AiAssistantSDK
      */
     public function resetUserQuota(string $userId, ?string $sessionId = null): array
     {
-        if (!$this->widgetToken) {
-            throw new Exception('Widget token is required for quota operations');
+        if (!$this->jwtSecret) {
+            throw new Exception('JWT secret is required for quota operations');
         }
 
         $data = ['user_id' => $userId];
@@ -329,7 +337,11 @@ class AiAssistantSDK
             $data['session_id'] = $sessionId;
         }
 
-        $response = $this->makeApiRequest('POST', '/api/quota/reset', $data);
+        $jwt = $this->generateJWT([
+            'action' => 'reset_quota'
+        ]);
+
+        $response = $this->makeApiRequestWithJWT('POST', '/api/quota/reset', $data, $jwt);
         return $response;
     }
 
