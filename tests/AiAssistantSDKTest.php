@@ -47,7 +47,7 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('<script', $html);
         $this->assertStringContainsString('ai-chat-widget.js', $html);
         $this->assertStringContainsString('data-ai-chat-token="wt_test_token"', $html);
-        $this->assertStringContainsString('data-user-id="test_user_123"', $html);
+        $this->assertStringContainsString('data-member-id="test_user_123"', $html);
     }
 
     public function testGetWidgetHTMLWithOptions(): void
