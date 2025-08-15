@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.1.0...v6.1.1) (2025-08-15)
+
+
+### Bug Fixes
+
+* Use API-provided remaining values instead of calculating manually ([664c381](https://github.com/maxwebtech/ai-assistant-sdk/commit/664c381ba2904eccd0713d73dee3acda8d94d082))
+
 ## [6.1.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v6.0.1...v6.1.0) (2025-08-15)
 
 
