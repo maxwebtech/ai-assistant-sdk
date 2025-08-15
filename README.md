@@ -75,6 +75,47 @@ $sdk->assignMembershipTier('user-123', 'premium', (int) getenv('AI_ASSISTANT_TEN
 $sdk->resetUserQuota('user-123', (int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
 ```
 
+## 即時用量更新（NEW）
+
+使用 Iframe 模式時，可監聽用量更新事件來即時顯示剩餘次數：
+
+```javascript
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'ai-chat-usage-updated') {
+        const usage = event.data.usage;
+        
+        console.log('訊息使用量:', {
+            used: usage.messages.used,
+            limit: usage.messages.limit,
+            remaining: usage.messages.remaining
+        });
+        
+        console.log('對話使用量:', {
+            used: usage.conversations.used,
+            limit: usage.conversations.limit,
+            remaining: usage.conversations.remaining
+        });
+        
+        console.log('會員等級:', usage.membershipLevel);
+        
+        // 更新你的 UI 顯示
+        updateUsageDisplay(usage);
+    }
+});
+
+function updateUsageDisplay(usage) {
+    // 範例：更新頁面上的使用量顯示
+    if (usage.messages.limit) {
+        document.getElementById('messages-count').textContent = 
+            `${usage.messages.used}/${usage.messages.limit}`;
+        document.getElementById('messages-remaining').textContent = 
+            `剩餘 ${usage.messages.remaining} 則訊息`;
+    } else {
+        document.getElementById('messages-remaining').textContent = '無限制';
+    }
+}
+```
+
 ## 設定說明
 
 - `widget_token`：後台建立助手後取得
