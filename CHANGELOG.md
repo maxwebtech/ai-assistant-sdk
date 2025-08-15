@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v5.0.0...v6.0.0) (2025-08-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* tenantId parameter is now required for quota and membership methods
+
+### Bug Fixes
+
+* Add required tenantId parameter to JWT authenticated methods ([2154518](https://github.com/maxwebtech/ai-assistant-sdk/commit/21545183dbd32db8aa9cf3b42363328a4a747387))
+
 ## [5.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v4.0.0...v5.0.0) (2025-08-15)
 
 
