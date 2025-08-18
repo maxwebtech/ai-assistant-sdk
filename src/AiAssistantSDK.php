@@ -357,7 +357,14 @@ class AiAssistantSDK
         $messageUsed = $usage['messages'] ?? 0;
         $messageRemaining = $remaining['messages'] ?? null;
 
-        return [
+        // 每月限制（如果 API 有提供）
+        $monthlyConversationLimit = $tier['monthly_conversation_limit'] ?? null;
+        $monthlyMessageLimit = $tier['monthly_message_limit'] ?? null;
+        $monthlyUsage = $data['monthly_usage'] ?? [];
+        $monthlyRemaining = $data['remaining_monthly_conversations'] ?? null;
+        $monthlyMessagesRemaining = $data['remaining_monthly_messages'] ?? null;
+
+        $result = [
             'daily_conversations' => [
                 'used' => $conversationUsed,
                 'remaining' => $conversationRemaining,
@@ -373,6 +380,25 @@ class AiAssistantSDK
             'membership_level' => $tier['slug'] ?? 'free',
             'reset_time' => $data['reset_time'] ?? '每日 00:00',
         ];
+
+        // 如果 API 有提供每月數據，加入到回傳結果
+        if ($monthlyConversationLimit !== null || $monthlyMessageLimit !== null) {
+            $result['monthly_conversations'] = [
+                'used' => $monthlyUsage['conversations'] ?? 0,
+                'remaining' => $monthlyRemaining,
+                'limit' => $monthlyConversationLimit,
+                'unlimited' => $monthlyConversationLimit === null,
+            ];
+            $result['monthly_messages'] = [
+                'used' => $monthlyUsage['messages'] ?? 0,
+                'remaining' => $monthlyMessagesRemaining,
+                'limit' => $monthlyMessageLimit,
+                'unlimited' => $monthlyMessageLimit === null,
+            ];
+            $result['monthly_reset_time'] = $data['monthly_reset_time'] ?? '每月 1 日 00:00';
+        }
+
+        return $result;
     }
 
     /**

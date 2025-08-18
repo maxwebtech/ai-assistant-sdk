@@ -46,6 +46,12 @@ $quota = $sdk->checkUserQuota($userId, (int) getenv('AI_ASSISTANT_TENANT_ID'), n
 
 $daily = $quota['daily_conversations'];
 printf('今日對話：已用 %d，剩餘 %s', $daily['used'], $daily['unlimited'] ? '無限制' : (string) $daily['remaining']);
+
+// 如果有設定每月限制，也會在回應中包含
+if (isset($quota['monthly_conversations'])) {
+    $monthly = $quota['monthly_conversations'];
+    printf('本月對話：已用 %d，剩餘 %s', $monthly['used'], $monthly['unlimited'] ? '無限制' : (string) $monthly['remaining']);
+}
 ```
 
 ## Iframe 嵌入（可選）
@@ -113,6 +119,63 @@ function updateUsageDisplay(usage) {
     } else {
         document.getElementById('messages-remaining').textContent = '無限制';
     }
+}
+```
+
+## 每月限制支援（NEW）
+
+SDK 現在支援彈性的每日和每月限制設定：
+
+### 1. 只設定每日限制
+```php
+$membership = [
+    'level' => 'daily_plan',
+    'daily_conversation_limit' => 20,
+    'daily_message_limit' => 200,
+    'monthly_conversation_limit' => null, // 不限制每月
+    'monthly_message_limit' => null
+];
+```
+
+### 2. 只設定每月限制
+```php
+$membership = [
+    'level' => 'monthly_plan',
+    'daily_conversation_limit' => null,   // 不限制每日
+    'daily_message_limit' => null,
+    'monthly_conversation_limit' => 500,
+    'monthly_message_limit' => 5000
+];
+```
+
+### 3. 同時設定兩種限制
+```php
+$membership = [
+    'level' => 'strict_plan',
+    'daily_conversation_limit' => 10,     // 每日最多10個對話
+    'daily_message_limit' => 100,         // 每日最多100條訊息
+    'monthly_conversation_limit' => 200,  // 每月最多200個對話
+    'monthly_message_limit' => 2000       // 每月最多2000條訊息
+];
+```
+
+當同時設定每日和每月限制時，用戶需要同時滿足兩種限制才能使用。
+
+### 檢查每月用量
+```php
+$quota = $sdk->checkUserQuota($userId, $tenantId, null, null, $jwt);
+
+// 檢查每日用量
+if (isset($quota['daily_messages'])) {
+    $daily = $quota['daily_messages'];
+    echo "每日訊息：{$daily['used']}/{$daily['limit']} (剩餘 {$daily['remaining']})";
+}
+
+// 檢查每月用量（如果有設定）
+if (isset($quota['monthly_messages'])) {
+    $monthly = $quota['monthly_messages'];
+    echo "每月訊息：{$monthly['used']}/{$monthly['limit']} (剩餘 {$monthly['remaining']})";
+    echo "每月重置時間：{$quota['monthly_reset_time']}";
 }
 ```
 
