@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.1.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v7.0.1...v7.1.0) (2025-08-18)
+
+
+### Features
+
+* **sdk:** add monthly quota support and update documentation ([a722907](https://github.com/maxwebtech/ai-assistant-sdk/commit/a722907ade6f0f22f433305fc22afef81f5b53f7))
+
 ## [7.0.1](https://github.com/maxwebtech/ai-assistant-sdk/compare/v7.0.0...v7.0.1) (2025-08-15)
 
 
