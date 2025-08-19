@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace MaxWebTech\AiAssistant\Tests;
 
-use PHPUnit\Framework\TestCase;
-use MaxWebTech\AiAssistant\AiAssistantSDK;
-use InvalidArgumentException;
 use Exception;
+use MaxWebTech\AiAssistant\AiAssistantSDK;
+use PHPUnit\Framework\TestCase;
 
 class AiAssistantSDKTest extends TestCase
 {
     private AiAssistantSDK $sdk;
+
     private array $testUser;
 
     protected function setUp(): void
@@ -20,27 +20,26 @@ class AiAssistantSDKTest extends TestCase
             'widget_token' => 'wt_test_token',
             'iframe_token' => 'if_test_token',
             'jwt_secret' => 'test_secret_key',
-            'issuer' => 'https://test-website.com'
+            'issuer' => 'https://test-website.com',
         ]);
 
         $this->testUser = [
             'id' => 'test_user_123',
             'name' => 'Test User',
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
         ];
     }
 
-    public function testConstructorWorksWithoutJwtSecret(): void
+    public function test_constructor_works_without_jwt_secret(): void
     {
         $sdk = new AiAssistantSDK([
-            'widget_token' => 'wt_test'
+            'widget_token' => 'wt_test',
         ]);
 
         $this->assertInstanceOf(AiAssistantSDK::class, $sdk);
     }
 
-
-    public function testGetWidgetHTML(): void
+    public function test_get_widget_html(): void
     {
         $html = $this->sdk->getWidgetHTML($this->testUser);
 
@@ -50,12 +49,12 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('data-member-id="test_user_123"', $html);
     }
 
-    public function testGetWidgetHTMLWithOptions(): void
+    public function test_get_widget_html_with_options(): void
     {
         $options = [
             'title' => 'Custom Title',
             'theme' => 'dark',
-            'membership' => ['level' => 'premium']
+            'membership' => ['level' => 'premium'],
         ];
 
         $html = $this->sdk->getWidgetHTML($this->testUser, $options);
@@ -64,10 +63,10 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('data-theme="dark"', $html);
     }
 
-    public function testGetWidgetHTMLRequiresWidgetToken(): void
+    public function test_get_widget_html_requires_widget_token(): void
     {
         $sdk = new AiAssistantSDK([
-            'jwt_secret' => 'test_secret'
+            'jwt_secret' => 'test_secret',
         ]);
 
         $this->expectException(Exception::class);
@@ -76,7 +75,7 @@ class AiAssistantSDKTest extends TestCase
         $sdk->getWidgetHTML($this->testUser);
     }
 
-    public function testGetIframeHTML(): void
+    public function test_get_iframe_html(): void
     {
         $html = $this->sdk->getIframeHTML($this->testUser);
 
@@ -86,12 +85,12 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('user_id=test_user_123', $html);
     }
 
-    public function testGetIframeHTMLWithOptions(): void
+    public function test_get_iframe_html_with_options(): void
     {
         $options = [
             'width' => '500',
             'height' => '700',
-            'title' => 'Custom Chat'
+            'title' => 'Custom Chat',
         ];
 
         $html = $this->sdk->getIframeHTML($this->testUser, $options);
@@ -101,11 +100,11 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('title=Custom', $html);
     }
 
-    public function testGetIframeHTMLRequiresIframeToken(): void
+    public function test_get_iframe_html_requires_iframe_token(): void
     {
         $sdk = new AiAssistantSDK([
             'widget_token' => 'wt_test',
-            'jwt_secret' => 'test_secret'
+            'jwt_secret' => 'test_secret',
         ]);
 
         $this->expectException(Exception::class);
@@ -114,7 +113,7 @@ class AiAssistantSDKTest extends TestCase
         $sdk->getIframeHTML($this->testUser);
     }
 
-    public function testGetWidgetJS(): void
+    public function test_get_widget_js(): void
     {
         $js = $this->sdk->getWidgetJS($this->testUser);
 
@@ -124,17 +123,16 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('document.body.appendChild', $js);
     }
 
-
-    public function testHTMLEscaping(): void
+    public function test_html_escaping(): void
     {
         $userWithSpecialChars = [
             'id' => 'test_123',
             'name' => 'Test "User" & Co',
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
         ];
 
         $options = [
-            'title' => 'Chat "Title" & More'
+            'title' => 'Chat "Title" & More',
         ];
 
         $html = $this->sdk->getWidgetHTML($userWithSpecialChars, $options);
@@ -143,5 +141,4 @@ class AiAssistantSDKTest extends TestCase
         $this->assertStringContainsString('Chat &quot;Title&quot; &amp; More', $html);
         $this->assertStringNotContainsString('Chat "Title" & More', $html);
     }
-
 }
