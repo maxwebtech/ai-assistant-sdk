@@ -81,6 +81,98 @@ $sdk->assignMembershipTier('user-123', 'premium', (int) getenv('AI_ASSISTANT_TEN
 $sdk->resetUserQuota('user-123', (int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
 ```
 
+## 會員對話歷史 API（NEW）
+
+```php
+// 取得會員的對話列表
+$conversations = $sdk->getMemberConversations('user-123', $jwt, $page = 1, $perPage = 20);
+
+foreach ($conversations['data'] as $conversation) {
+    echo "對話: {$conversation['title']} (ID: {$conversation['id']})";
+    echo "助手: {$conversation['assistant']['name']}";
+    echo "訊息數: {$conversation['message_count']}";
+    echo "最後更新: {$conversation['last_message_at']}";
+}
+
+// 取得特定對話的完整內容（包含所有訊息）
+$conversationDetails = $sdk->getMemberConversation('user-123', $conversationId, $jwt);
+
+echo "對話標題: {$conversationDetails['conversation']['title']}";
+foreach ($conversationDetails['messages'] as $message) {
+    echo "{$message['role']}: {$message['content']}";
+}
+
+// 取得對話訊息（分頁）
+$messages = $sdk->getMemberConversationMessages('user-123', $conversationId, $jwt, $page = 1, $perPage = 50);
+
+echo "對話: {$messages['conversation']['title']}";
+echo "總訊息數: {$messages['pagination']['total']}";
+foreach ($messages['messages'] as $message) {
+    echo "{$message['role']}: {$message['content']} ({$message['created_at']})";
+}
+```
+
+### 回傳格式說明
+
+**對話列表：**
+```php
+[
+    'data' => [
+        [
+            'id' => 1,
+            'title' => '關於產品問題',
+            'created_at' => '2025-01-01T10:00:00Z',
+            'last_message_at' => '2025-01-01T10:30:00Z',
+            'message_count' => 5,
+            'assistant' => [
+                'id' => 1,
+                'name' => '客服助手'
+            ]
+        ]
+    ],
+    'pagination' => [
+        'current_page' => 1,
+        'per_page' => 20,
+        'total' => 100,
+        'last_page' => 5
+    ]
+]
+```
+
+**對話詳情：**
+```php
+[
+    'conversation' => [
+        'id' => 1,
+        'title' => '關於產品問題',
+        'created_at' => '2025-01-01T10:00:00Z',
+        'last_message_at' => '2025-01-01T10:30:00Z',
+        'message_count' => 5,
+        'status' => 'active',
+        'assistant' => [
+            'id' => 1,
+            'name' => '客服助手'
+        ]
+    ],
+    'messages' => [
+        [
+            'id' => 1,
+            'role' => 'user',
+            'content' => '你好，我想詢問產品相關問題',
+            'created_at' => '2025-01-01T10:00:00Z',
+            'metadata' => []
+        ],
+        [
+            'id' => 2,
+            'role' => 'assistant', 
+            'content' => '您好！我很樂意為您解答產品相關問題',
+            'created_at' => '2025-01-01T10:01:00Z',
+            'metadata' => []
+        ]
+    ]
+]
+```
+
 ## 即時用量更新（NEW）
 
 使用 Iframe 模式時，可監聽用量更新事件來即時顯示剩餘次數：

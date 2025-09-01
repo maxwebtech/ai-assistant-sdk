@@ -560,4 +560,65 @@ class AiAssistantSDK
 
         return $decodedResponse;
     }
+
+    /**
+     * 獲取會員的對話歷史列表
+     *
+     * @param string $memberId 會員ID
+     * @param string $jwt JWT認證token
+     * @param int $page 頁數
+     * @param int $perPage 每頁數量
+     * @return array 對話列表
+     * @throws Exception
+     */
+    public function getMemberConversations(string $memberId, string $jwt, int $page = 1, int $perPage = 20): array
+    {
+        $params = [
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+
+        $response = $this->makeApiRequestWithJWT('GET', "/api/member/{$memberId}/conversations", $params, $jwt);
+
+        return $response;
+    }
+
+    /**
+     * 獲取特定對話的完整內容（包含所有訊息）
+     *
+     * @param string $memberId 會員ID
+     * @param int $conversationId 對話ID
+     * @param string $jwt JWT認證token
+     * @return array 對話詳細內容
+     * @throws Exception
+     */
+    public function getMemberConversation(string $memberId, int $conversationId, string $jwt): array
+    {
+        $response = $this->makeApiRequestWithJWT('GET', "/api/member/{$memberId}/conversations/{$conversationId}", [], $jwt);
+
+        return $response;
+    }
+
+    /**
+     * 獲取特定對話的訊息記錄（分頁）
+     *
+     * @param string $memberId 會員ID
+     * @param int $conversationId 對話ID
+     * @param string $jwt JWT認證token
+     * @param int $page 頁數
+     * @param int $perPage 每頁數量
+     * @return array 對話訊息
+     * @throws Exception
+     */
+    public function getMemberConversationMessages(string $memberId, int $conversationId, string $jwt, int $page = 1, int $perPage = 50): array
+    {
+        $params = [
+            'page' => $page,
+            'per_page' => $perPage,
+        ];
+
+        $response = $this->makeApiRequestWithJWT('GET', "/api/member/{$memberId}/conversations/{$conversationId}/messages", $params, $jwt);
+
+        return $response;
+    }
 }
