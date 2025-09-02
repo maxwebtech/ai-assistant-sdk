@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.1.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v8.0.0...v8.1.0) (2025-09-02)
+
+
+### Features
+
+* **sdk:** add optional origin headers for server-to-server validation ([ae26247](https://github.com/maxwebtech/ai-assistant-sdk/commit/ae262476b72ea79c1a0a6b54c5f031e7dabdcd87))
+
 ## [8.0.0](https://github.com/maxwebtech/ai-assistant-sdk/compare/v7.3.0...v8.0.0) (2025-09-02)
 
 
