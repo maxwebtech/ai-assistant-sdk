@@ -26,7 +26,7 @@ $sdk = new AiAssistantSDK([
     'api_url' => 'https://your-api-domain.com',
 ]);
 
-$jwt = 'your_jwt_token'; // 從您的系統生成的JWT
+$token = 'your_bearer_token'; // 支援 JWT 或 widget/iframe token（if_/wt_）
 $userId = 'user_123';    // 可選: 特定用戶ID，null = 所有用戶
 ```
 
@@ -34,15 +34,15 @@ $userId = 'user_123';    // 可選: 特定用戶ID，null = 所有用戶
 
 ```php
 // 今日使用量
-$today = $sdk->getTodayUsage($jwt, $userId);
+$today = $sdk->getTodayUsage($token, $userId);
 echo "今日對話: {$today['conversations']}, 訊息: {$today['messages']}";
 
 // 本月使用量
-$thisMonth = $sdk->getThisMonthUsage($jwt, $userId);
+$thisMonth = $sdk->getThisMonthUsage($token, $userId);
 echo "本月對話: {$thisMonth['total_conversations']}";
 
 // 本週使用量
-$thisWeek = $sdk->getThisWeekUsage($jwt, $userId);
+$thisWeek = $sdk->getThisWeekUsage($token, $userId);
 echo "本週對話: {$thisWeek['total_conversations']}";
 ```
 
@@ -50,10 +50,10 @@ echo "本週對話: {$thisWeek['total_conversations']}";
 
 ```php
 // 特定月份
-$monthly = $sdk->getMonthlyUsage('2025-08', $jwt, $userId);
+$monthly = $sdk->getMonthlyUsage('2025-08', $token, $userId);
 
 // 日期範圍 (最多90天)
-$daily = $sdk->getDailyUsage('2025-09-01', '2025-09-07', $jwt, $userId);
+$daily = $sdk->getDailyUsage('2025-09-01', '2025-09-07', $token, $userId);
 foreach ($daily['daily_usage'] as $day) {
     echo "{$day['date']}: {$day['conversations']} 對話\n";
 }
@@ -72,7 +72,7 @@ echo "最近7天平均對話: {$trend['averages']['last_7_days_conversations']}"
 ### 創建分析器
 
 ```php
-$analyzer = $sdk->createUsageAnalyzer($jwt, $userId);
+$analyzer = $sdk->createUsageAnalyzer($token, $userId);
 ```
 
 ### 摘要分析
@@ -226,9 +226,9 @@ function getUserUsageReport($sdk, $jwt, $userId) {
 ### 管理後台月度報表
 
 ```php
-function generateMonthlyReport($sdk, $jwt, $month) {
-    $analyzer = $sdk->createUsageAnalyzer($jwt);
-    $monthly = $sdk->getMonthlyUsage($month, $jwt);
+function generateMonthlyReport($sdk, $token, $month) {
+    $analyzer = $sdk->createUsageAnalyzer($token);
+    $monthly = $sdk->getMonthlyUsage($month, $token);
     $patterns = $analyzer->getUsagePatterns();
     
     return [
@@ -242,8 +242,8 @@ function generateMonthlyReport($sdk, $jwt, $month) {
 ### 容量預警系統
 
 ```php
-function checkCapacityWarning($sdk, $jwt, $threshold = 10000) {
-    $analyzer = $sdk->createUsageAnalyzer($jwt);
+function checkCapacityWarning($sdk, $token, $threshold = 10000) {
+    $analyzer = $sdk->createUsageAnalyzer($token);
     $projection = $analyzer->getUsageProjection();
     
     if ($projection['projected_month_end']['conversations'] > $threshold) {
@@ -290,7 +290,7 @@ function checkCapacityWarning($sdk, $jwt, $threshold = 10000) {
 
 ```php
 try {
-    $usage = $sdk->getMonthlyUsage('2025-13', $jwt); // 無效月份
+    $usage = $sdk->getMonthlyUsage('2025-13', $token); // 無效月份
 } catch (Exception $e) {
     echo "錯誤: " . $e->getMessage();
     // 錯誤: API Error (422): The month field must be a valid date format.
@@ -298,20 +298,22 @@ try {
 
 try {
     // 超過90天限制
-    $usage = $sdk->getDailyUsage('2025-01-01', '2025-06-01', $jwt);
+    $usage = $sdk->getDailyUsage('2025-01-01', '2025-06-01', $token);
 } catch (Exception $e) {
     echo "錯誤: " . $e->getMessage();
     // 錯誤: API Error (400): Date range cannot exceed 90 days
 }
 ```
 
-## 限制說明
+## 認證與限制
 
 - **日期範圍限制**: 每日使用量查詢最多支援90天範圍
 - **月份格式**: 必須使用 `YYYY-MM` 格式
 - **日期格式**: 必須使用 `YYYY-MM-DD` 格式
-- **JWT 認證**: 所有 Usage API 都需要有效的JWT token
-- **租戶隔離**: 自動根據JWT中的租戶信息進行數據隔離
+- **認證**: Usage API 需要有效 Bearer token。
+  - 支援 JWT 或 widget/iframe token（`if_`/`wt_`）。
+  - 為便於後端查詢，Usage API 對 widget/iframe token 放寬來源檢查（無需 `Origin`）。其他路由仍依原白名單策略。
+- **租戶隔離**: 依據 token 解析到的租戶自動隔離（JWT: tenant 由 payload 辨識；widget/iframe: 由 token 綁定）
 
 ## 測試
 
