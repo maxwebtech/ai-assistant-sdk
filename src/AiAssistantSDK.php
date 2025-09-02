@@ -564,11 +564,12 @@ class AiAssistantSDK
     /**
      * 獲取會員的對話歷史列表
      *
-     * @param string $memberId 會員ID
-     * @param string $jwt JWT認證token
-     * @param int $page 頁數
-     * @param int $perPage 每頁數量
+     * @param  string  $memberId  會員ID
+     * @param  string  $jwt  JWT認證token
+     * @param  int  $page  頁數
+     * @param  int  $perPage  每頁數量
      * @return array 對話列表
+     *
      * @throws Exception
      */
     public function getMemberConversations(string $memberId, string $jwt, int $page = 1, int $perPage = 20): array
@@ -586,10 +587,11 @@ class AiAssistantSDK
     /**
      * 獲取特定對話的完整內容（包含所有訊息）
      *
-     * @param string $memberId 會員ID
-     * @param int $conversationId 對話ID
-     * @param string $jwt JWT認證token
+     * @param  string  $memberId  會員ID
+     * @param  int  $conversationId  對話ID
+     * @param  string  $jwt  JWT認證token
      * @return array 對話詳細內容
+     *
      * @throws Exception
      */
     public function getMemberConversation(string $memberId, int $conversationId, string $jwt): array
@@ -602,12 +604,13 @@ class AiAssistantSDK
     /**
      * 獲取特定對話的訊息記錄（分頁）
      *
-     * @param string $memberId 會員ID
-     * @param int $conversationId 對話ID
-     * @param string $jwt JWT認證token
-     * @param int $page 頁數
-     * @param int $perPage 每頁數量
+     * @param  string  $memberId  會員ID
+     * @param  int  $conversationId  對話ID
+     * @param  string  $jwt  JWT認證token
+     * @param  int  $page  頁數
+     * @param  int  $perPage  每頁數量
      * @return array 對話訊息
+     *
      * @throws Exception
      */
     public function getMemberConversationMessages(string $memberId, int $conversationId, string $jwt, int $page = 1, int $perPage = 50): array

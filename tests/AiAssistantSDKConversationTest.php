@@ -6,17 +6,18 @@ use PHPUnit\Framework\TestCase;
 class AiAssistantSDKConversationTest extends TestCase
 {
     private AiAssistantSDK $sdk;
+
     private string $mockJwt = 'mock.jwt.token';
 
     protected function setUp(): void
     {
         $this->sdk = new AiAssistantSDK([
             'widget_token' => 'test-widget-token',
-            'api_url' => 'https://api.test.com'
+            'api_url' => 'https://api.test.com',
         ]);
     }
 
-    public function testGetMemberConversationsRequiresJWT()
+    public function test_get_member_conversations_requires_jwt()
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failed to make API request');
@@ -24,7 +25,7 @@ class AiAssistantSDKConversationTest extends TestCase
         $this->sdk->getMemberConversations('test-member-123', '');
     }
 
-    public function testGetMemberConversationRequiresJWT()
+    public function test_get_member_conversation_requires_jwt()
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failed to make API request');
@@ -32,7 +33,7 @@ class AiAssistantSDKConversationTest extends TestCase
         $this->sdk->getMemberConversation('test-member-123', 1, '');
     }
 
-    public function testGetMemberConversationMessagesRequiresJWT()
+    public function test_get_member_conversation_messages_requires_jwt()
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failed to make API request');
@@ -40,7 +41,7 @@ class AiAssistantSDKConversationTest extends TestCase
         $this->sdk->getMemberConversationMessages('test-member-123', 1, '');
     }
 
-    public function testMethodsAcceptValidParameters()
+    public function test_methods_accept_valid_parameters()
     {
         // These would fail due to no actual API, but we're testing parameter validation
         try {
