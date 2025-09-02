@@ -1,6 +1,14 @@
 # AI Assistant PHP SDK
 
-超快整合 AI 小幫手的 PHP 套件。內建 JWT 支援、會員等級、對話與訊息額度，3 分鐘上線。
+超快整合 AI 小幫手的 PHP 套件。內建 JWT 支援、會員等級、對話與訊息額度、**使用量統計分析**，3 分鐘上線。
+
+## ✨ 新功能
+
+- 🔥 **Usage API**: 完整使用量統計與分析
+- 📊 **進階分析器**: 趨勢分析、使用預測、模式識別
+- 📈 **智能報告**: 自動生成文字和數據報告
+- 🎯 **多維查詢**: 今日、本週、本月、自定義日期範圍
+- 👥 **靈活過濾**: 全體用戶或個人統計
 
 ## 安裝
 
@@ -8,7 +16,17 @@
 composer require maxwebtech/ai-assistant-sdk firebase/php-jwt
 ```
 
-## 快速開始（3 步驟）
+## 目錄
+
+- [快速開始](#快速開始4-步驟)
+- [Iframe 嵌入](#iframe-嵌入可選)
+- [會員與用量 API](#會員與用量-api可選)
+- [Usage API - 使用量統計](#usage-api---使用量統計new)
+- [會員對話歷史 API](#會員對話歷史-apinew)
+- [即時用量更新](#即時用量更新new)
+- [每月限制支援](#每月限制支援new)
+
+## 快速開始（4 步驟）
 
 1) 初始化
 
@@ -54,6 +72,23 @@ if (isset($quota['monthly_conversations'])) {
 }
 ```
 
+4) 使用量統計（可選）
+
+```php
+// 快速獲取今日使用量統計
+$today = $sdk->getTodayUsage($jwt, $userId);
+echo "今日: {$today['conversations']} 對話, {$today['messages']} 訊息";
+
+// 創建分析器進行進階分析
+$analyzer = $sdk->createUsageAnalyzer($jwt, $userId);
+$summary = $analyzer->todaySummary();
+echo "平均每對話訊息數: {$summary['avg_messages_per_conversation']}";
+
+// 生成完整使用量報告
+$textReport = $analyzer->getTextReport();
+echo $textReport; // 包含趨勢、對比、預測等完整分析
+```
+
 ## Iframe 嵌入（可選）
 
 ```php
@@ -80,6 +115,125 @@ $sdk->assignMembershipTier('user-123', 'premium', (int) getenv('AI_ASSISTANT_TEN
 // 重置用量快取（同上）
 $sdk->resetUserQuota('user-123', (int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
 ```
+
+## Usage API - 使用量統計（NEW）
+
+透過 Usage API 輕鬆追蹤和分析使用量統計，支援多種時間範圍和進階分析功能。
+
+### 基本使用量查詢
+
+```php
+// 今日使用量
+$today = $sdk->getTodayUsage($jwt, $userId); // $userId 可選，null = 全體用戶
+echo "今日對話: {$today['conversations']}, 訊息: {$today['messages']}";
+
+// 本月使用量
+$thisMonth = $sdk->getThisMonthUsage($jwt, $userId);
+echo "本月總對話: {$thisMonth['total_conversations']}";
+
+// 本週使用量
+$thisWeek = $sdk->getThisWeekUsage($jwt, $userId);
+echo "本週對話: {$thisWeek['total_conversations']}";
+
+// 自定義月份
+$august = $sdk->getMonthlyUsage('2025-08', $jwt, $userId);
+
+// 自定義日期範圍 (最多90天)
+$weekly = $sdk->getDailyUsage('2025-09-01', '2025-09-07', $jwt, $userId);
+foreach ($weekly['daily_usage'] as $day) {
+    echo "{$day['date']}: {$day['conversations']} 對話\n";
+}
+```
+
+### 進階分析 - UsageAnalyzer
+
+```php
+// 創建分析器
+$analyzer = $sdk->createUsageAnalyzer($jwt, $userId);
+
+// 今日摘要
+$todaySummary = $analyzer->todaySummary();
+echo "平均每對話訊息: {$todaySummary['avg_messages_per_conversation']}";
+
+// 本月摘要
+$monthSummary = $analyzer->thisMonthSummary();
+echo "日平均對話: {$monthSummary['daily_average_conversations']}";
+
+// 使用量對比 (本月 vs 上月)
+$comparison = $analyzer->getUsageComparison();
+echo "對話變化: {$comparison['changes']['conversations_change_percent']}%";
+echo "趨勢: {$comparison['changes']['conversation_growth']}"; // increase/decrease/stable
+
+// 週使用量分析
+$weekly = $analyzer->getWeeklyAnalysis();
+echo "活躍天數: {$weekly['active_days_count']}";
+echo "最活躍日: {$weekly['most_active_day']['date']}";
+
+// 使用量預測
+$projection = $analyzer->getUsageProjection();
+echo "預計月底對話數: {$projection['projected_month_end']['conversations']}";
+
+// 使用模式分析
+$patterns = $analyzer->getUsagePatterns();
+echo "最活躍星期: {$patterns['insights']['most_active_weekday']}";
+```
+
+### 報告生成
+
+```php
+// 生成完整數據報告
+$report = $analyzer->generateReport();
+echo "總對話數: {$report['summary']['total_conversations']}";
+echo "對話變化: {$report['month_comparison']['conversations_change_percent']}%";
+
+// 生成文字報告
+$textReport = $analyzer->getTextReport();
+echo $textReport;
+```
+
+文字報告範例輸出：
+```
+=== 使用量分析報告 ===
+
+📊 基本統計 (2025-08-03 至 2025-09-02)
+- 總對話數: 450
+- 總訊息數: 1800
+- 日平均對話: 15.0
+
+📅 今日狀況 (2025-09-02)
+- 對話數: 18
+- 訊息數: 72
+
+📈 月度趨勢
+- 對話數變化: +25.5% (↗️)
+- 訊息數變化: +20.8% (↗️)
+
+🔄 使用模式
+- 最活躍日: Tuesday
+- 最安靜日: Sunday
+```
+
+### 使用場景範例
+
+```php
+// Dashboard 即時統計
+$stats = $sdk->getTodayUsage($jwt);
+
+// 個人使用量查詢
+$userStats = $sdk->getThisMonthUsage($jwt, $userId);
+
+// 容量預警系統
+$projection = $analyzer->getUsageProjection();
+if ($projection['projected_month_end']['conversations'] > 10000) {
+    sendAlert("使用量即將超標");
+}
+
+// 生成月度報表
+$monthlyReport = $analyzer->generateReport();
+$textReport = $analyzer->getTextReport();
+```
+
+詳細說明請參考：[Usage API 完整文檔](USAGE_API.md)
 
 ## 會員對話歷史 API（NEW）
 
