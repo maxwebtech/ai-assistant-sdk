@@ -25,6 +25,10 @@ class AiAssistantSDK
 
     private string $apiUrl;
 
+    // Optional headers for server-to-server validation with widget/iframe tokens
+    private ?string $origin = null;
+    private ?string $parentOrigin = null;
+
     // SDK 不簽發 JWT；僅接受外部提供的 JWT。
 
     /**
@@ -36,6 +40,11 @@ class AiAssistantSDK
         $this->iframeToken = $config['iframe_token'] ?? null;
         $this->apiUrl = $config['api_url'] ?? 'http://localhost:8000';
         // 不處理 jwt_secret/tenant_id/issuer，請於服務端簽發
+
+        // 可選：為使用 widget/iframe token 的後端請求加入來源驗證標頭
+        // 與後端的 ApiTenantAuth 相容：Origin 或 X-Parent-Origin
+        $this->origin = $config['origin'] ?? null;
+        $this->parentOrigin = $config['parent_origin'] ?? null;
     }
 
     /**
@@ -521,14 +530,25 @@ class AiAssistantSDK
     {
         $url = rtrim($this->apiUrl, '/').$endpoint;
 
+        // Base headers
+        $headers = [
+            'Authorization: Bearer '.$jwt,
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ];
+
+        // Optional origin headers for widget/iframe token validation (server-to-server)
+        if (! empty($this->origin)) {
+            $headers[] = 'Origin: '.$this->origin;
+        }
+        if (! empty($this->parentOrigin)) {
+            $headers[] = 'X-Parent-Origin: '.$this->parentOrigin;
+        }
+
         $options = [
             'http' => [
                 'method' => $method,
-                'header' => [
-                    'Authorization: Bearer '.$jwt,
-                    'Content-Type: application/json',
-                    'Accept: application/json',
-                ],
+                'header' => $headers,
                 'ignore_errors' => true,
             ],
         ];
