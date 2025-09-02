@@ -57,10 +57,10 @@ echo $sdk->getWidgetHTML($user, [
 3) 查詢用量（自動避免匿名誤判）
 
 ```php
-// 會優先使用 SDK config 的 tenant_id
+// 租戶信息從JWT自動解析
 // 若提供 membershipLevel，SDK 會先行同步（assign）會員等級再查詢
 // 直接使用你服務端簽的 JWT（必要）
-$quota = $sdk->checkUserQuota($userId, (int) getenv('AI_ASSISTANT_TENANT_ID'), null, null, $jwt);
+$quota = $sdk->checkUserQuota($userId, $jwt, $sessionId, $membershipLevel);
 
 $daily = $quota['daily_conversations'];
 printf('今日對話：已用 %d，剩餘 %s', $daily['used'], $daily['unlimited'] ? '無限制' : (string) $daily['remaining']);
@@ -107,13 +107,13 @@ echo $sdk->getIframeHTML($user, [
 
 ```php
 // 取得等級清單（需管理權限 JWT）
-$tiers = $sdk->getMembershipTiers((int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
+$tiers = $sdk->getMembershipTiers($jwt);
 
 // 指定用戶等級（直接提供管理 JWT）
-$sdk->assignMembershipTier('user-123', 'premium', (int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
+$sdk->assignMembershipTier('user-123', 'premium', $jwt);
 
 // 重置用量快取（同上）
-$sdk->resetUserQuota('user-123', (int) getenv('AI_ASSISTANT_TENANT_ID'), $jwt);
+$sdk->resetUserQuota('user-123', $jwt);
 ```
 
 ## Usage API - 使用量統計（NEW）
@@ -409,7 +409,7 @@ $membership = [
 
 ### 檢查每月用量
 ```php
-$quota = $sdk->checkUserQuota($userId, $tenantId, null, null, $jwt);
+$quota = $sdk->checkUserQuota($userId, $jwt);
 
 // 檢查每日用量
 if (isset($quota['daily_messages'])) {
@@ -428,10 +428,10 @@ if (isset($quota['monthly_messages'])) {
 ## 設定說明
 
 - `widget_token`：後台建立助手後取得
-- `jwt_secret`：後台租戶設定的 JWT secret（建議設，SDK 才能自動帶 JWT）
-- `tenant_id`：你的租戶 ID（查用量與管理 API 需要）
+- `iframe_token`：後台建立iframe token（可選）
 - `api_url`：後端 API 位址（本機多為 `http://localhost:8000`）
-- `issuer`：你的站點 URL（可選）
+
+**重要**：租戶信息完全從 JWT 中解析，無需在 SDK 設定中提供 `tenant_id`
 
 ## 常見問題
 

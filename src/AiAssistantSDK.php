@@ -263,11 +263,12 @@ class AiAssistantSDK
     /**
      * 獲取租戶的所有會員等級
      *
+     * @param  string  $jwt  JWT認證token
      * @return array 會員等級清單
      *
      * @throws Exception
      */
-    public function getMembershipTiers(int $tenantId, string $jwt): array
+    public function getMembershipTiers(string $jwt): array
     {
         $response = $this->makeApiRequestWithJWT('GET', '/api/membership-tiers', [], $jwt);
 
@@ -297,13 +298,14 @@ class AiAssistantSDK
      * 檢查用戶使用額度
      *
      * @param  string  $userId  用戶ID
-     * @param  int  $tenantId  租戶ID
+     * @param  string  $jwt  JWT認證token
      * @param  string|null  $sessionId  會話ID（匿名用戶）
+     * @param  string|null  $membershipLevel  會員等級（已棄用，從JWT中獲取）
      * @return array 額度使用狀況
      *
      * @throws Exception
      */
-    public function checkUserQuota(string $userId, int $tenantId, ?string $sessionId = null, ?string $membershipLevel = null, ?string $jwt = null): array
+    public function checkUserQuota(string $userId, string $jwt, ?string $sessionId = null, ?string $membershipLevel = null): array
     {
         if (! $jwt) {
             throw new Exception('JWT is required for quota operations. Please pass a signed JWT.');
@@ -406,12 +408,12 @@ class AiAssistantSDK
      *
      * @param  string  $userId  用戶ID
      * @param  string  $tierSlug  等級標識
-     * @param  int  $tenantId  租戶ID
+     * @param  string  $jwt  JWT認證token
      * @return array 操作結果
      *
      * @throws Exception
      */
-    public function assignMembershipTier(string $userId, string $tierSlug, int $tenantId, string $jwt): array
+    public function assignMembershipTier(string $userId, string $tierSlug, string $jwt): array
     {
         $data = [
             'user_id' => $userId,
@@ -427,13 +429,13 @@ class AiAssistantSDK
      * 重置用戶每日使用量
      *
      * @param  string  $userId  用戶ID
-     * @param  int  $tenantId  租戶ID
+     * @param  string  $jwt  JWT認證token
      * @param  string|null  $sessionId  會話ID（匿名用戶）
      * @return array 操作結果
      *
      * @throws Exception
      */
-    public function resetUserQuota(string $userId, int $tenantId, string $jwt, ?string $sessionId = null): array
+    public function resetUserQuota(string $userId, string $jwt, ?string $sessionId = null): array
     {
         $data = ['user_id' => $userId];
         if ($sessionId) {
