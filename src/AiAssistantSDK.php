@@ -624,4 +624,168 @@ class AiAssistantSDK
 
         return $response;
     }
+
+    /**
+     * 獲取指定月份的使用量統計
+     *
+     * @param  string  $month  月份 (YYYY-MM)
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選，不指定則獲取所有用戶統計)
+     * @return array 月使用量統計
+     *
+     * @throws Exception
+     */
+    public function getMonthlyUsage(string $month, string $jwt, ?string $userId = null): array
+    {
+        $params = ['month' => $month];
+        if ($userId) {
+            $params['user_id'] = $userId;
+        }
+
+        $response = $this->makeApiRequestWithJWT('GET', '/api/usage/monthly', $params, $jwt);
+
+        return $response['data'] ?? $response;
+    }
+
+    /**
+     * 獲取指定日期範圍的每日使用量統計
+     *
+     * @param  string  $startDate  開始日期 (YYYY-MM-DD)
+     * @param  string  $endDate  結束日期 (YYYY-MM-DD)
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選，不指定則獲取所有用戶統計)
+     * @return array 每日使用量統計
+     *
+     * @throws Exception
+     */
+    public function getDailyUsage(string $startDate, string $endDate, string $jwt, ?string $userId = null): array
+    {
+        $params = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+        if ($userId) {
+            $params['user_id'] = $userId;
+        }
+
+        $response = $this->makeApiRequestWithJWT('GET', '/api/usage/daily', $params, $jwt);
+
+        return $response['data'] ?? $response;
+    }
+
+    /**
+     * 獲取今日使用量統計
+     *
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選)
+     * @return array 今日使用量統計
+     *
+     * @throws Exception
+     */
+    public function getTodayUsage(string $jwt, ?string $userId = null): array
+    {
+        $today = date('Y-m-d');
+        $usage = $this->getDailyUsage($today, $today, $jwt, $userId);
+
+        return [
+            'date' => $today,
+            'conversations' => $usage['daily_usage'][0]['conversations'] ?? 0,
+            'messages' => $usage['daily_usage'][0]['messages'] ?? 0,
+            'unique_users' => $usage['daily_usage'][0]['unique_users'] ?? 0,
+        ];
+    }
+
+    /**
+     * 獲取本月使用量統計
+     *
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選)
+     * @return array 本月使用量統計
+     *
+     * @throws Exception
+     */
+    public function getThisMonthUsage(string $jwt, ?string $userId = null): array
+    {
+        $thisMonth = date('Y-m');
+        return $this->getMonthlyUsage($thisMonth, $jwt, $userId);
+    }
+
+    /**
+     * 獲取本週使用量統計 (週一到今天)
+     *
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選)
+     * @return array 本週使用量統計
+     *
+     * @throws Exception
+     */
+    public function getThisWeekUsage(string $jwt, ?string $userId = null): array
+    {
+        $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+        $today = date('Y-m-d');
+
+        $usage = $this->getDailyUsage($startOfWeek, $today, $jwt, $userId);
+
+        return [
+            'week_start' => $startOfWeek,
+            'week_end' => $today,
+            'daily_usage' => $usage['daily_usage'],
+            'total_conversations' => $usage['summary']['total_conversations'],
+            'total_messages' => $usage['summary']['total_messages'],
+            'total_days' => $usage['summary']['total_days'],
+        ];
+    }
+
+    /**
+     * 獲取使用量趨勢分析 (最近30天)
+     *
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選)
+     * @return array 使用量趨勢
+     *
+     * @throws Exception
+     */
+    public function getUsageTrend(string $jwt, ?string $userId = null): array
+    {
+        $endDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+
+        $usage = $this->getDailyUsage($startDate, $endDate, $jwt, $userId);
+
+        // 計算趨勢
+        $dailyUsage = $usage['daily_usage'];
+        $conversationTrend = array_map(fn($day) => $day['conversations'], $dailyUsage);
+        $messageTrend = array_map(fn($day) => $day['messages'], $dailyUsage);
+
+        // 計算7天平均
+        $recent7Days = array_slice($dailyUsage, -7);
+        $avg7DaysConversations = array_sum(array_column($recent7Days, 'conversations')) / 7;
+        $avg7DaysMessages = array_sum(array_column($recent7Days, 'messages')) / 7;
+
+        return [
+            'period' => ['start' => $startDate, 'end' => $endDate],
+            'daily_usage' => $dailyUsage,
+            'summary' => $usage['summary'],
+            'trends' => [
+                'conversations' => $conversationTrend,
+                'messages' => $messageTrend,
+            ],
+            'averages' => [
+                'last_7_days_conversations' => round($avg7DaysConversations, 2),
+                'last_7_days_messages' => round($avg7DaysMessages, 2),
+            ],
+        ];
+    }
+
+    /**
+     * 創建 UsageAnalyzer 實例進行進階分析
+     *
+     * @param  string  $jwt  JWT認證token
+     * @param  string|null  $userId  用戶ID (可選)
+     * @return UsageAnalyzer 使用量分析器
+     */
+    public function createUsageAnalyzer(string $jwt, ?string $userId = null): UsageAnalyzer
+    {
+        return new UsageAnalyzer($this, $jwt, $userId);
+    }
 }
