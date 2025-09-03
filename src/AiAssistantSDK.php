@@ -27,6 +27,7 @@ class AiAssistantSDK
 
     // Optional headers for server-to-server validation with widget/iframe tokens
     private ?string $origin = null;
+
     private ?string $parentOrigin = null;
 
     // SDK 不簽發 JWT；僅接受外部提供的 JWT。
@@ -729,6 +730,7 @@ class AiAssistantSDK
     public function getThisMonthUsage(string $jwt, ?string $userId = null): array
     {
         $thisMonth = date('Y-m');
+
         return $this->getMonthlyUsage($thisMonth, $jwt, $userId);
     }
 
@@ -776,8 +778,8 @@ class AiAssistantSDK
 
         // 計算趨勢
         $dailyUsage = $usage['daily_usage'];
-        $conversationTrend = array_map(fn($day) => $day['conversations'], $dailyUsage);
-        $messageTrend = array_map(fn($day) => $day['messages'], $dailyUsage);
+        $conversationTrend = array_map(fn ($day) => $day['conversations'], $dailyUsage);
+        $messageTrend = array_map(fn ($day) => $day['messages'], $dailyUsage);
 
         // 計算7天平均
         $recent7Days = array_slice($dailyUsage, -7);

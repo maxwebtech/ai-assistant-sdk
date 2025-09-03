@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace MaxWebTech\AiAssistant;
 
 use DateTime;
-use Exception;
 
 /**
  * Usage Analyzer Helper Class
- * 
+ *
  * 提供便利的使用量統計和分析功能
- * 
+ *
  * @version 1.0.0
+ *
  * @author MaxWebTech Team
  */
 class UsageAnalyzer
 {
     private AiAssistantSDK $sdk;
+
     private string $jwt;
+
     private ?string $userId;
 
     public function __construct(AiAssistantSDK $sdk, string $jwt, ?string $userId = null)
@@ -34,14 +36,14 @@ class UsageAnalyzer
     public function todaySummary(): array
     {
         $today = $this->sdk->getTodayUsage($this->jwt, $this->userId);
-        
+
         return [
             'date' => $today['date'],
             'conversations' => $today['conversations'],
             'messages' => $today['messages'],
             'unique_users' => $today['unique_users'],
-            'avg_messages_per_conversation' => $today['conversations'] > 0 
-                ? round($today['messages'] / $today['conversations'], 2) 
+            'avg_messages_per_conversation' => $today['conversations'] > 0
+                ? round($today['messages'] / $today['conversations'], 2)
                 : 0,
         ];
     }
@@ -52,14 +54,14 @@ class UsageAnalyzer
     public function thisMonthSummary(): array
     {
         $month = $this->sdk->getThisMonthUsage($this->jwt, $this->userId);
-        
+
         return [
             'month' => $month['month'],
             'total_conversations' => $month['total_conversations'],
             'total_messages' => $month['total_messages'],
             'unique_users' => $month['unique_users'],
-            'avg_messages_per_conversation' => $month['total_conversations'] > 0 
-                ? round($month['total_messages'] / $month['total_conversations'], 2) 
+            'avg_messages_per_conversation' => $month['total_conversations'] > 0
+                ? round($month['total_messages'] / $month['total_conversations'], 2)
                 : 0,
             'daily_average_conversations' => round($month['total_conversations'] / date('j'), 2),
             'daily_average_messages' => round($month['total_messages'] / date('j'), 2),
@@ -73,15 +75,15 @@ class UsageAnalyzer
     {
         $thisMonth = date('Y-m');
         $lastMonth = date('Y-m', strtotime('-1 month'));
-        
+
         $currentMonth = $this->sdk->getMonthlyUsage($thisMonth, $this->jwt, $this->userId);
         $previousMonth = $this->sdk->getMonthlyUsage($lastMonth, $this->jwt, $this->userId);
-        
-        $conversationChange = $previousMonth['total_conversations'] > 0 
+
+        $conversationChange = $previousMonth['total_conversations'] > 0
             ? (($currentMonth['total_conversations'] - $previousMonth['total_conversations']) / $previousMonth['total_conversations']) * 100
             : ($currentMonth['total_conversations'] > 0 ? 100 : 0);
-            
-        $messageChange = $previousMonth['total_messages'] > 0 
+
+        $messageChange = $previousMonth['total_messages'] > 0
             ? (($currentMonth['total_messages'] - $previousMonth['total_messages']) / $previousMonth['total_messages']) * 100
             : ($currentMonth['total_messages'] > 0 ? 100 : 0);
 
@@ -103,11 +105,11 @@ class UsageAnalyzer
     public function getWeeklyAnalysis(): array
     {
         $thisWeek = $this->sdk->getThisWeekUsage($this->jwt, $this->userId);
-        
+
         // 計算每日平均
-        $activeDays = array_filter($thisWeek['daily_usage'], fn($day) => $day['conversations'] > 0 || $day['messages'] > 0);
+        $activeDays = array_filter($thisWeek['daily_usage'], fn ($day) => $day['conversations'] > 0 || $day['messages'] > 0);
         $activeDaysCount = count($activeDays);
-        
+
         // 找出最活躍的一天
         $mostActiveDay = null;
         $maxActivity = 0;
@@ -147,14 +149,14 @@ class UsageAnalyzer
         $trend = $this->sdk->getUsageTrend($this->jwt, $this->userId);
         $comparison = $this->getUsageComparison();
         $todaySummary = $this->todaySummary();
-        
+
         // 計算峰值和低谷
         $conversationData = $trend['trends']['conversations'];
         $messageData = $trend['trends']['messages'];
-        
+
         $peakConversationDay = array_keys($conversationData, max($conversationData))[0] ?? null;
         $peakMessageDay = array_keys($messageData, max($messageData))[0] ?? null;
-        
+
         return [
             'report_period' => $trend['period'],
             'summary' => [
@@ -187,18 +189,18 @@ class UsageAnalyzer
     public function getUsageProjection(): array
     {
         $trend = $this->sdk->getUsageTrend($this->jwt, $this->userId);
-        
+
         $recent7DaysConversations = $trend['averages']['last_7_days_conversations'];
         $recent7DaysMessages = $trend['averages']['last_7_days_messages'];
-        
+
         $currentMonth = date('Y-m');
         $daysInMonth = date('t');
         $currentDay = date('j');
         $remainingDays = $daysInMonth - $currentDay;
-        
+
         // 獲取本月已有數據
         $thisMonth = $this->sdk->getThisMonthUsage($this->jwt, $this->userId);
-        
+
         return [
             'current_month_actual' => [
                 'conversations' => $thisMonth['total_conversations'],
@@ -228,7 +230,7 @@ class UsageAnalyzer
     {
         $trend = $this->sdk->getUsageTrend($this->jwt, $this->userId);
         $dailyUsage = $trend['daily_usage'];
-        
+
         // 計算星期幾的模式
         $weekdayStats = [
             1 => ['conversations' => 0, 'messages' => 0, 'count' => 0], // Monday
@@ -239,18 +241,18 @@ class UsageAnalyzer
             6 => ['conversations' => 0, 'messages' => 0, 'count' => 0], // Saturday
             0 => ['conversations' => 0, 'messages' => 0, 'count' => 0], // Sunday
         ];
-        
+
         foreach ($dailyUsage as $day) {
             $dayOfWeek = (new DateTime($day['date']))->format('w');
             $weekdayStats[$dayOfWeek]['conversations'] += $day['conversations'];
             $weekdayStats[$dayOfWeek]['messages'] += $day['messages'];
             $weekdayStats[$dayOfWeek]['count']++;
         }
-        
+
         // 計算每個星期幾的平均值
         $weekdayAverages = [];
         $dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
+
         foreach ($weekdayStats as $dayNum => $stats) {
             if ($stats['count'] > 0) {
                 $weekdayAverages[$dayNames[$dayNum]] = [
@@ -260,13 +262,13 @@ class UsageAnalyzer
                 ];
             }
         }
-        
+
         // 找出最活躍和最安靜的日子
         $mostActiveDay = null;
         $leastActiveDay = null;
         $maxActivity = -1;
         $minActivity = PHP_INT_MAX;
-        
+
         foreach ($weekdayAverages as $day => $stats) {
             $activity = $stats['avg_conversations'] + $stats['avg_messages'];
             if ($activity > $maxActivity) {
@@ -278,7 +280,7 @@ class UsageAnalyzer
                 $leastActiveDay = $day;
             }
         }
-        
+
         return [
             'weekday_patterns' => $weekdayAverages,
             'insights' => [
@@ -300,48 +302,48 @@ class UsageAnalyzer
     {
         $report = $this->generateReport();
         $patterns = $this->getUsagePatterns();
-        
+
         $text = "=== 使用量分析報告 ===\n\n";
-        
+
         // 基本統計
         $text .= "📊 基本統計 ({$report['report_period']['start']} 至 {$report['report_period']['end']})\n";
         $text .= "- 總對話數: {$report['summary']['total_conversations']}\n";
         $text .= "- 總訊息數: {$report['summary']['total_messages']}\n";
         $text .= "- 日平均對話: {$report['summary']['avg_conversations_per_day']}\n";
         $text .= "- 日平均訊息: {$report['summary']['avg_messages_per_day']}\n\n";
-        
+
         // 今日狀況
         $text .= "📅 今日狀況 ({$report['today_status']['date']})\n";
         $text .= "- 對話數: {$report['today_status']['conversations']}\n";
         $text .= "- 訊息數: {$report['today_status']['messages']}\n";
         $text .= "- 每對話平均訊息: {$report['today_status']['avg_messages_per_conversation']}\n\n";
-        
+
         // 趨勢分析
         $text .= "📈 月度趨勢\n";
         $conversationChange = $report['month_comparison']['conversations_change_percent'];
         $messageChange = $report['month_comparison']['messages_change_percent'];
-        $text .= "- 對話數變化: {$conversationChange}% (" . ($conversationChange > 0 ? '↗️' : ($conversationChange < 0 ? '↘️' : '➡️')) . ")\n";
-        $text .= "- 訊息數變化: {$messageChange}% (" . ($messageChange > 0 ? '↗️' : ($messageChange < 0 ? '↘️' : '➡️')) . ")\n\n";
-        
+        $text .= "- 對話數變化: {$conversationChange}% (".($conversationChange > 0 ? '↗️' : ($conversationChange < 0 ? '↘️' : '➡️')).")\n";
+        $text .= "- 訊息數變化: {$messageChange}% (".($messageChange > 0 ? '↗️' : ($messageChange < 0 ? '↘️' : '➡️')).")\n\n";
+
         // 使用模式
         if ($patterns['insights']['most_active_weekday']) {
             $text .= "🔄 使用模式\n";
             $text .= "- 最活躍日: {$patterns['insights']['most_active_weekday']}\n";
             $text .= "- 最安靜日: {$patterns['insights']['least_active_weekday']}\n\n";
         }
-        
+
         // 高峰表現
         if ($report['peak_performance']['highest_conversations_day']) {
             $text .= "🏆 高峰表現\n";
             $peak = $report['peak_performance']['highest_conversations_day'];
             $text .= "- 最高對話日: {$peak['date']} ({$peak['conversations']} 對話)\n";
-            
+
             $peakMsg = $report['peak_performance']['highest_messages_day'];
             if ($peakMsg) {
                 $text .= "- 最高訊息日: {$peakMsg['date']} ({$peakMsg['messages']} 訊息)\n";
             }
         }
-        
+
         return $text;
     }
 }

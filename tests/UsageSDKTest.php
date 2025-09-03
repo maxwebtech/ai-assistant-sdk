@@ -11,7 +11,9 @@ use PHPUnit\Framework\TestCase;
 class UsageSDKTest extends TestCase
 {
     private AiAssistantSDK $sdk;
+
     private string $testJwt;
+
     private string $testUserId;
 
     protected function setUp(): void
@@ -249,7 +251,7 @@ class UsageSDKTest extends TestCase
     {
         $startOfWeek = date('Y-m-d', strtotime('monday this week'));
         $today = date('Y-m-d');
-        
+
         $expectedResponse = [
             'success' => true,
             'data' => [
@@ -257,7 +259,7 @@ class UsageSDKTest extends TestCase
                 'end_date' => $today,
                 'daily_usage' => [
                     ['date' => $startOfWeek, 'conversations' => 15, 'messages' => 60, 'unique_users' => 5],
-                    ['date' => date('Y-m-d', strtotime($startOfWeek . ' +1 day')), 'conversations' => 12, 'messages' => 48, 'unique_users' => 4],
+                    ['date' => date('Y-m-d', strtotime($startOfWeek.' +1 day')), 'conversations' => 12, 'messages' => 48, 'unique_users' => 4],
                     ['date' => $today, 'conversations' => 18, 'messages' => 72, 'unique_users' => 6],
                 ],
                 'summary' => [
@@ -289,7 +291,7 @@ class UsageSDKTest extends TestCase
     {
         $endDate = date('Y-m-d');
         $startDate = date('Y-m-d', strtotime('-30 days'));
-        
+
         // Create mock daily usage data for 31 days
         $dailyUsageData = [];
         for ($i = 0; $i <= 30; $i++) {
@@ -303,7 +305,7 @@ class UsageSDKTest extends TestCase
                 'unique_users' => rand(1, 5),
             ];
         }
-        
+
         $expectedResponse = [
             'success' => true,
             'data' => [
@@ -341,7 +343,7 @@ class UsageSDKTest extends TestCase
     {
         $endDate = date('Y-m-d');
         $startDate = date('Y-m-d', strtotime('-30 days'));
-        
+
         $expectedResponse = [
             'success' => true,
             'data' => [
@@ -394,7 +396,7 @@ class UsageSDKTest extends TestCase
             'success' => true,
             'data' => ['month' => '2025-09', 'total_conversations' => 100],
         ];
-        
+
         $responseWithoutData = ['month' => '2025-09', 'total_conversations' => 100];
 
         // Test with 'data' key

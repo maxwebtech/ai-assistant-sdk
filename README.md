@@ -75,13 +75,12 @@ if (isset($quota['monthly_conversations'])) {
 4) 使用量統計（可選）
 
 ```php
-// 快速獲取今日使用量統計（Bearer token 支援 JWT 或 widget/iframe token）
-$token = $jwt ?? getenv('AI_ASSISTANT_IFRAME_TOKEN');
-$today = $sdk->getTodayUsage($token, $userId);
+// 快速獲取今日使用量統計（使用 JWT）
+$today = $sdk->getTodayUsage($jwt, $userId);
 echo "今日: {$today['conversations']} 對話, {$today['messages']} 訊息";
 
 // 創建分析器進行進階分析
-$analyzer = $sdk->createUsageAnalyzer($token, $userId);
+$analyzer = $sdk->createUsageAnalyzer($jwt, $userId);
 $summary = $analyzer->todaySummary();
 echo "平均每對話訊息數: {$summary['avg_messages_per_conversation']}";
 
@@ -124,24 +123,23 @@ $sdk->resetUserQuota('user-123', $jwt);
 ### 基本使用量查詢
 
 ```php
-// 今日使用量（傳入 Bearer token：JWT 或 widget/iframe token）
-$token = $jwt ?? getenv('AI_ASSISTANT_IFRAME_TOKEN');
-$today = $sdk->getTodayUsage($token, $userId); // $userId 可選，null = 全體用戶
+// 今日使用量（使用 JWT）
+$today = $sdk->getTodayUsage($jwt, $userId); // $userId 可選，null = 全體用戶
 echo "今日對話: {$today['conversations']}, 訊息: {$today['messages']}";
 
 // 本月使用量
-$thisMonth = $sdk->getThisMonthUsage($token, $userId);
+$thisMonth = $sdk->getThisMonthUsage($jwt, $userId);
 echo "本月總對話: {$thisMonth['total_conversations']}";
 
 // 本週使用量
-$thisWeek = $sdk->getThisWeekUsage($token, $userId);
+$thisWeek = $sdk->getThisWeekUsage($jwt, $userId);
 echo "本週對話: {$thisWeek['total_conversations']}";
 
 // 自定義月份
-$august = $sdk->getMonthlyUsage('2025-08', $token, $userId);
+$august = $sdk->getMonthlyUsage('2025-08', $jwt, $userId);
 
 // 自定義日期範圍 (最多90天)
-$weekly = $sdk->getDailyUsage('2025-09-01', '2025-09-07', $token, $userId);
+$weekly = $sdk->getDailyUsage('2025-09-01', '2025-09-07', $jwt, $userId);
 foreach ($weekly['daily_usage'] as $day) {
     echo "{$day['date']}: {$day['conversations']} 對話\n";
 }
@@ -151,7 +149,7 @@ foreach ($weekly['daily_usage'] as $day) {
 
 ```php
 // 創建分析器
-$analyzer = $sdk->createUsageAnalyzer($token, $userId);
+$analyzer = $sdk->createUsageAnalyzer($jwt, $userId);
 
 // 今日摘要
 $todaySummary = $analyzer->todaySummary();
@@ -219,10 +217,10 @@ echo $textReport;
 
 ```php
 // Dashboard 即時統計
-$stats = $sdk->getTodayUsage($token);
+$stats = $sdk->getTodayUsage($jwt);
 
 // 個人使用量查詢
-$userStats = $sdk->getThisMonthUsage($token, $userId);
+$userStats = $sdk->getThisMonthUsage($jwt, $userId);
 
 // 容量預警系統
 $projection = $analyzer->getUsageProjection();

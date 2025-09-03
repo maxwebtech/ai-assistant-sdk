@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MaxWebTech\AiAssistant\Tests;
 
-use Exception;
 use MaxWebTech\AiAssistant\AiAssistantSDK;
 use MaxWebTech\AiAssistant\UsageAnalyzer;
 use PHPUnit\Framework\TestCase;
@@ -12,8 +11,11 @@ use PHPUnit\Framework\TestCase;
 class UsageAnalyzerTest extends TestCase
 {
     private AiAssistantSDK $sdk;
+
     private UsageAnalyzer $analyzer;
+
     private string $testJwt;
+
     private string $testUserId;
 
     protected function setUp(): void
@@ -21,7 +23,7 @@ class UsageAnalyzerTest extends TestCase
         $this->sdk = $this->createMock(AiAssistantSDK::class);
         $this->testJwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.test';
         $this->testUserId = 'test_user_123';
-        
+
         $this->analyzer = new UsageAnalyzer($this->sdk, $this->testJwt, $this->testUserId);
     }
 
@@ -185,12 +187,12 @@ class UsageAnalyzerTest extends TestCase
         $this->assertEquals(70, $result['totals']['conversations']);
         $this->assertEquals(280, $result['totals']['messages']);
         $this->assertEquals(6, $result['active_days_count']); // 6 active days (excluding the 0 day)
-        
+
         // Most active day should be 2025-09-05 (20 conversations + 80 messages = 100 total activity)
         $this->assertEquals('2025-09-05', $result['most_active_day']['date']);
         $this->assertEquals(20, $result['most_active_day']['conversations']);
         $this->assertEquals(80, $result['most_active_day']['messages']);
-        
+
         // Check averages are calculated correctly (70 conversations / 6 active days = 11.67)
         $this->assertEquals(11.67, $result['averages']['daily_conversations']);
         $this->assertEquals(46.67, $result['averages']['daily_messages']);
@@ -231,15 +233,15 @@ class UsageAnalyzerTest extends TestCase
         $this->assertEquals(100, $result['current_month_actual']['messages']);
         $this->assertEquals(12.5, $result['recent_daily_average']['conversations']);
         $this->assertEquals(50.0, $result['recent_daily_average']['messages']);
-        
+
         // Check projected totals
-        $currentDay = (int)date('j');
-        $daysInMonth = (int)date('t');
+        $currentDay = (int) date('j');
+        $daysInMonth = (int) date('t');
         $remainingDays = $daysInMonth - $currentDay;
-        
+
         $expectedConversations = 25 + (12.5 * $remainingDays);
         $expectedMessages = 100 + (50.0 * $remainingDays);
-        
+
         $this->assertEquals($expectedConversations, $result['projected_month_end']['conversations']);
         $this->assertEquals($expectedMessages, $result['projected_month_end']['messages']);
         $this->assertEquals($remainingDays, $result['projected_month_end']['remaining_days']);
