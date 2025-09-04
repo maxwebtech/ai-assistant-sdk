@@ -802,6 +802,29 @@ class AiAssistantSDK
     }
 
     /**
+     * 搜尋會員的對話記錄
+     *
+     * @param  string  $memberId  會員ID
+     * @param  string  $keyword  搜尋關鍵字
+     * @param  string  $jwt  JWT認證token
+     * @return array 搜尋結果
+     *
+     * @throws Exception
+     */
+    public function searchMemberConversations(string $memberId, string $keyword, string $jwt): array
+    {
+        if (empty($keyword)) {
+            throw new InvalidArgumentException('Search keyword is required');
+        }
+
+        $data = ['keyword' => $keyword];
+
+        $response = $this->makeApiRequestWithJWT('POST', "/api/member/{$memberId}/conversations/search", $data, $jwt);
+
+        return $response;
+    }
+
+    /**
      * 創建 UsageAnalyzer 實例進行進階分析
      *
      * @param  string  $jwt  JWT認證token

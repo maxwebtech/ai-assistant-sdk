@@ -23,6 +23,7 @@ composer require maxwebtech/ai-assistant-sdk firebase/php-jwt
 - [會員與用量 API](#會員與用量-api可選)
 - [Usage API - 使用量統計](#usage-api---使用量統計new)
 - [會員對話歷史 API](#會員對話歷史-apinew)
+- [會員對話搜尋 API](#會員對話搜尋-apinew)
 - [即時用量更新](#即時用量更新new)
 - [每月限制支援](#每月限制支援new)
 
@@ -324,6 +325,93 @@ foreach ($messages['messages'] as $message) {
             'metadata' => []
         ]
     ]
+]
+```
+
+## 會員對話搜尋 API（NEW）
+
+快速搜尋會員的聊天記錄，支援關鍵字模糊搜尋：
+
+```php
+// 搜尋特定會員的對話記錄
+$searchResults = $sdk->searchMemberConversations('user-123', '訂單狀態', $jwt);
+
+if ($searchResults['status'] === 'success') {
+    echo "找到 " . count($searchResults['data']) . " 個相關對話\n";
+    
+    foreach ($searchResults['data'] as $conversation) {
+        echo "對話ID: {$conversation['id']}\n";
+        echo "首則訊息: {$conversation['first_message']}\n";
+        echo "創建時間: {$conversation['created_at']}\n";
+        echo "訊息數量: {$conversation['message_count']}\n";
+        echo "---\n";
+    }
+} else {
+    echo "搜尋失敗: {$searchResults['message']}\n";
+}
+
+// 搜尋 + 獲取完整對話內容
+$searchResults = $sdk->searchMemberConversations('user-123', '問題', $jwt);
+
+if ($searchResults['status'] === 'success' && !empty($searchResults['data'])) {
+    $firstConversation = $searchResults['data'][0];
+    $conversationId = $firstConversation['id'];
+    
+    // 獲取完整對話內容
+    $conversation = $sdk->getMemberConversation('user-123', $conversationId, $jwt);
+    
+    echo "完整對話內容:\n";
+    foreach ($conversation['messages'] as $message) {
+        echo "[{$message['role']}] {$message['content']}\n";
+    }
+}
+```
+
+### 搜尋功能特性
+
+- ✅ **模糊搜尋**: 支援 LIKE `%keyword%` 模式搜尋
+- ✅ **全文搜尋**: 搜尋所有對話的完整訊息內容
+- ✅ **權限控制**: 僅搜尋指定會員的對話記錄
+- ✅ **時間排序**: 搜尋結果按最後更新時間倒序排列
+- ✅ **狀態過濾**: 自動排除已刪除的對話
+- ✅ **安全認證**: 需要有效的 JWT 認證
+
+### 搜尋回傳格式
+
+**成功時：**
+```php
+[
+    'status' => 'success',
+    'data' => [
+        [
+            'id' => 123,
+            'first_message' => '您好，我想詢問訂單狀態',
+            'created_at' => '2024-01-15 14:30:00',
+            'message_count' => 5
+        ],
+        [
+            'id' => 456,
+            'first_message' => '關於訂單編號 ORD-001 的問題',
+            'created_at' => '2024-01-14 09:15:00', 
+            'message_count' => 12
+        ]
+    ]
+]
+```
+
+**失敗時：**
+```php
+[
+    'status' => 'error',
+    'message' => '會員不存在' // 或其他錯誤訊息
+]
+```
+
+**無結果時：**
+```php
+[
+    'status' => 'success',
+    'data' => []
 ]
 ```
 
